@@ -1,0 +1,21 @@
+A simple calculator language (sc) - interpreter and compiler
+============================================================
+
+c4i - interpreter [make c4i]
+c4c - compiler -> [make c4c]
+sas - the assembler for a simulated stack machine [make sas]
+
+Example programs:
+
+for.sc - a double for loop
+fact.sc - factorial
+
+To run:
+
+c4i fact.sc
+c4c fact.sc >fact.sas
+sas fact.sas
+
+c4i for.sc
+c4c for.sc >for.sas
+sas for.sas
