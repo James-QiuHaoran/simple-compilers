@@ -1,0 +1,4 @@
+rm calc3a.exe calc3b.exe calc3g.exe calc1.exe calc2.exe
+rm lex.yy.o y.tab.o
+rm lex.yy.c y.tab.c
+rm y.tab.h

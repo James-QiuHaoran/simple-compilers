@@ -1,0 +1,18 @@
+// This grammar has no left recursion
+// but there are left factors, so not quite LL(1);
+// but ok as we can easily factor them out in the
+// implementation (i.e., rdcal.c)
+
+<prog>      :=  <expr> \n <prog>
+            |   epsilon
+
+<expr>      :=  <term> + <expr>  // note: right-associative
+            |   <term> - <expr>
+            |   <term>
+
+<term>      :=  <factor> * <term>
+            |   <factor> / <term>
+            |   <factor>
+
+<factor>    :=  <number>
+            |   ( <expr> )

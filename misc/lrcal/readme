@@ -1,0 +1,21 @@
+// This is a bottom-up implementation of the following grammar.
+// Note that <prog> is right-recursive.
+// To run:
+//	bison -d lrcal.y
+//	flex lrcal.l
+//	gcc -o lrcal lex.yy.c lrcal.tab.c
+//	lrcal
+
+<prog>      :=  <expr> \n <prog>
+            |   epsilon
+
+<expr>      :=  <term> + <expr>
+            |   <term> - <expr>
+            |   <term>
+
+<term>      :=  <factor> * <term>
+            |   <factor> / <term>
+            |   <factor>
+
+<factor>    :=  <number>
+            |   ( <expr> )
