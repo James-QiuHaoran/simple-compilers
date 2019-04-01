@@ -22,29 +22,35 @@ void yyerror(char *);
                 return INTEGER;
             }
 
-[-()<>=+*/;{}.%] {
+[-()<>=+*/] {
                 return *yytext;
-             }
+            }
+
+[;{}.%]     {
+                return *yytext;
+            }
 
 ">="            return GE;
 "<="            return LE;
 "=="            return EQ;
 "!="            return NE;
-"for"		return FOR;
+"for"           return FOR;
 "while"         return WHILE;
 "if"            return IF;
 "else"          return ELSE;
 "print"         return PRINT;
-"read"		return READ;
-"&&"		return AND;
-"||"		return OR;
+"read"          return READ;
+"&&"            return AND;
+"||"            return OR;
 
-\/\/.*\n	;	/* skip comments */
+\/\/.*\n        ;   /* skip comments */
 
-[ \t\n]+        ;       /* ignore whitespace */
+[ \t\n]+        ;   /* ignore whitespace */
 
 .               yyerror("Unknown character");
+
 %%
+
 int yywrap(void) {
     return 1;
 }

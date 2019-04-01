@@ -4,7 +4,6 @@
 #include <stdarg.h>
 #include "calc3.h"
 
-
 /* prototypes */
 nodeType *opr(int oper, int nops, ...);
 nodeType *id(int i);
@@ -30,7 +29,6 @@ int sym[26];                    /* symbol table */
 %nonassoc ELSE
 
 %left AND OR
-
 %left GE LE EQ NE '>' '<'
 %left '+' '-'
 %left '*' '/' '%'
@@ -50,17 +48,16 @@ function:
         ;
 
 stmt:
-          ';'                            { $$ = opr(';', 2, NULL, NULL); }
-        | expr ';'                       { $$ = $1; }
-        | PRINT expr ';'                 { $$ = opr(PRINT, 1, $2); }
-	| READ VARIABLE ';'		 { $$ = opr(READ, 1, id($2)); }
-        | VARIABLE '=' expr ';'          { $$ = opr('=', 2, id($1), $3); }
-	| FOR '(' stmt stmt stmt ')' stmt { $$ = opr(FOR, 4, $3, $4,
-$5, $7); }
-        | WHILE '(' expr ')' stmt        { $$ = opr(WHILE, 2, $3, $5); }
-        | IF '(' expr ')' stmt %prec IFX { $$ = opr(IF, 2, $3, $5); }
-        | IF '(' expr ')' stmt ELSE stmt { $$ = opr(IF, 3, $3, $5, $7); }
-        | '{' stmt_list '}'              { $$ = $2; }
+          ';'                             { $$ = opr(';', 2, NULL, NULL); }
+        | expr ';'                        { $$ = $1; }
+        | PRINT expr ';'                  { $$ = opr(PRINT, 1, $2); }
+        | READ VARIABLE ';'               { $$ = opr(READ, 1, id($2)); }
+        | VARIABLE '=' expr ';'           { $$ = opr('=', 2, id($1), $3); }
+        | FOR '(' stmt stmt stmt ')' stmt { $$ = opr(FOR, 4, $3, $4, $5, $7); }
+        | WHILE '(' expr ')' stmt         { $$ = opr(WHILE, 2, $3, $5); }
+        | IF '(' expr ')' stmt %prec IFX  { $$ = opr(IF, 2, $3, $5); }
+        | IF '(' expr ')' stmt ELSE stmt  { $$ = opr(IF, 3, $3, $5, $7); }
+        | '{' stmt_list '}'               { $$ = $2; }
         ;
 
 stmt_list:
@@ -83,8 +80,8 @@ expr:
         | expr LE expr          { $$ = opr(LE, 2, $1, $3); }
         | expr NE expr          { $$ = opr(NE, 2, $1, $3); }
         | expr EQ expr          { $$ = opr(EQ, 2, $1, $3); }
-	| expr AND expr		{ $$ = opr(AND, 2, $1, $3); }
-	| expr OR expr		{ $$ = opr(OR, 2, $1, $3); }
+        | expr AND expr         { $$ = opr(AND, 2, $1, $3); }
+        | expr OR expr          { $$ = opr(OR, 2, $1, $3); }
         | '(' expr ')'          { $$ = $2; }
         ;
 
