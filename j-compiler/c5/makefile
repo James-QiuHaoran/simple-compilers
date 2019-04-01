@@ -24,3 +24,7 @@ cleanc5:
 
 cleannas:
 	$(RM) nas.c nas.tab.c nas.tab.h nas
+
+clean:
+	$(RM) lex.yy.c y.tab.c y.tab.h c5i c5c
+	$(RM) nas.c nas.tab.c nas.tab.h nas
