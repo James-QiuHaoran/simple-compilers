@@ -1,3 +1,5 @@
+all: c5i c5c nas
+
 c5i: lex.yy.c y.tab.c c5i.c
 	gcc -o c5i lex.yy.c y.tab.c c5i.c
 
