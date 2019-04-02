@@ -13,16 +13,14 @@ Or, you can run `make all` to make all executables.
 for.sc - a double for loop
 fact.sc - factorial
 
-## To run
+## To run - compiler
 
 ```
-c5i fact.sc
-c5c fact.sc >fact.sas
-sas fact.sas
+c5c fact.sc >fact.nas
+nas fact.nas
 
-c5i for.sc
-c5c for.sc >for.sas
-sas for.sas
+c5c for.sc >for.nas
+nas for.nas
 ```
 
 Run `make clean` to remove all intermediate or auxiliary files.
