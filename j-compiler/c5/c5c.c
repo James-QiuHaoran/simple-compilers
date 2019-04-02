@@ -9,8 +9,13 @@ int ex(nodeType *p) {
 
     if (!p) return 0;
     switch(p->type) {
-        case typeCon:       
-            printf("\tpush\t%d\n", p->con.value); 
+        case typeCon:
+            if (p->con.type == conTypeInt)
+                printf("\tpush\t%d\n", (int) p->con.value);
+            else if (p->con.type == conTypeChar)
+                printf("\tpush\t\'%c\'\n", (char) p->con.value);
+            else if (p->con.type == conTypeString)
+                printf("\tpush\t\"%s\"\n", (char*) p->con.value);
             break;
         case typeId:        
             printf("\tpush\t%c\n", p->id.i + 'a'); 
@@ -21,7 +26,7 @@ int ex(nodeType *p) {
             ex(p->opr.op[0]);
             printf("L%03d:\n", lblx = lbl++);
             ex(p->opr.op[1]);
-            printf("\tjz\tL%03d\n", lbly = lbl++);
+            printf("\tj0\tL%03d\n", lbly = lbl++);
             ex(p->opr.op[3]);
             ex(p->opr.op[2]);
             printf("\tjmp\tL%03d\n", lblx);
@@ -30,7 +35,7 @@ int ex(nodeType *p) {
         case WHILE:
             printf("L%03d:\n", lbl1 = lbl++);
             ex(p->opr.op[0]);
-            printf("\tjz\tL%03d\n", lbl2 = lbl++);
+            printf("\tj0\tL%03d\n", lbl2 = lbl++);
             ex(p->opr.op[1]);
             printf("\tjmp\tL%03d\n", lbl1);
             printf("L%03d:\n", lbl2);
@@ -39,7 +44,7 @@ int ex(nodeType *p) {
             ex(p->opr.op[0]);
             if (p->opr.nops > 2) {
                 /* if else */
-                printf("\tjz\tL%03d\n", lbl1 = lbl++);
+                printf("\tj0\tL%03d\n", lbl1 = lbl++);
                 ex(p->opr.op[1]);
                 printf("\tjmp\tL%03d\n", lbl2 = lbl++);
                 printf("L%03d:\n", lbl1);
@@ -47,7 +52,7 @@ int ex(nodeType *p) {
                 printf("L%03d:\n", lbl2);
             } else {
                 /* if */
-                printf("\tjz\tL%03d\n", lbl1 = lbl++);
+                printf("\tj0\tL%03d\n", lbl1 = lbl++);
                 ex(p->opr.op[1]);
                 printf("L%03d:\n", lbl1);
             }

@@ -13,13 +13,27 @@ void yyerror(char *);
             }
 
 0           {
-                yylval.iValue = atoi(yytext);
+                yylval.varValue = (long) atoi(yytext); /* yylval.iValue = atoi(yytext); */
                 return INTEGER;
             }
 
 [1-9][0-9]* {
-                yylval.iValue = atoi(yytext);
+                yylval.varValue = (long) atoi(yytext); /* yylval.iValue = atoi(yytext); */
                 return INTEGER;
+            }
+
+'.?'        {
+                if (yyleng == 2)
+                    yylval.varValue = 0;  // empty
+                else
+                    yylval.varValue = (long) yytext[1];
+                return CHAR;
+            }
+
+\".*\"      {
+                yytext[yyleng - 1] = '\0';
+                yylval.varValue = (long) (yytext + 1);
+                return STRING;
             }
 
 [-()<>=+*/] {

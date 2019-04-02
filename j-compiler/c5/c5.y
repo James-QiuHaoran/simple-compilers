@@ -8,6 +8,7 @@
 nodeType *opr(int oper, int nops, ...);
 nodeType *id(int i);
 nodeType *con(int value);
+nodeType *var(long value, varTypeEnum type);
 void freeNode(nodeType *p);
 int ex(nodeType *p);
 int yylex(void);
@@ -18,11 +19,13 @@ int sym[26];                    /* symbol table */
 
 %union {
     int iValue;                 /* integer value */
+    long varValue;              /* const variable value (int | char | string) */
     char sIndex;                /* symbol table index */
     nodeType *nPtr;             /* node pointer */
 };
 
-%token <iValue> INTEGER
+/* %token <iValue> INTEGER */
+%token <varValue> INTEGER CHAR STRING
 %token <sIndex> VARIABLE
 %token FOR WHILE IF PRINT READ
 %nonassoc IFX
@@ -66,7 +69,9 @@ stmt_list:
         ;
 
 expr:
-          INTEGER               { $$ = con($1); }
+          INTEGER               { $$ = var($1, varTypeInt); } /* { $$ = con($1); } */
+        | CHAR                  { $$ = var($1, varTypeChar); }
+        | STRING                { $$ = var($1, varTypeString); }
         | VARIABLE              { $$ = id($1); }
         | '-' expr %prec UMINUS { $$ = opr(UMINUS, 1, $2); }
         | expr '+' expr         { $$ = opr('+', 2, $1, $3); }
@@ -100,6 +105,23 @@ nodeType *con(int value) {
 
     /* copy information */
     p->type = typeCon;
+    p->con.value = value;
+
+    return p;
+}
+
+nodeType *var(long value, conTypeEnum type) {
+    nodeType *p;
+    size_t nodeSize;
+
+    /* allocate node */
+    nodeSize = SIZEOF_NODETYPE + sizeof(conNodeType);
+    if ((p = malloc(nodeSize)) == NULL)
+        yyerror("out of memory");
+
+    /* copy information */
+    p->type = typeCon;
+    p->con.type = type;
     p->con.value = value;
 
     return p;
@@ -160,7 +182,7 @@ void yyerror(char *s) {
 }
 
 int main(int argc, char **argv) {
-extern FILE* yyin;
+    extern FILE* yyin;
     yyin = fopen(argv[1], "r");
     yyparse();
     return 0;
