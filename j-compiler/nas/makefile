@@ -6,3 +6,6 @@ nas.c: nas.l
 
 nas.tab.c: nas.y
 	bison -d nas.y
+
+clean:
+	rm -rf nas.tab.c nas.tab.h nas.c nas
