@@ -1,10 +1,10 @@
 typedef enum { typeCon, typeId, typeOpr } nodeEnum;
-typedef enum { conTypeInt, conTypeChar, conTypeString } conTypeEnum;
+typedef enum { varTypeInt, varTypeChar, varTypeString } varTypeEnum;
 
 /* constants */
 typedef struct {
     long value;                 /* value of constant */
-    conTypeEnum type;
+    varTypeEnum type;
 } conNodeType;
 
 /* identifiers */

@@ -10,11 +10,11 @@ int ex(nodeType *p) {
     if (!p) return 0;
     switch(p->type) {
         case typeCon:
-            if (p->con.type == conTypeInt)
+            if (p->con.type == varTypeInt)
                 printf("\tpush\t%d\n", (int) p->con.value);
-            else if (p->con.type == conTypeChar)
+            else if (p->con.type == varTypeChar)
                 printf("\tpush\t\'%c\'\n", (char) p->con.value);
-            else if (p->con.type == conTypeString)
+            else if (p->con.type == varTypeString)
                 printf("\tpush\t\"%s\"\n", (char*) p->con.value);
             break;
         case typeId:        

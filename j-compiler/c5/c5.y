@@ -110,7 +110,7 @@ nodeType *con(int value) {
     return p;
 }
 
-nodeType *var(long value, conTypeEnum type) {
+nodeType *var(long value, varTypeEnum type) {
     nodeType *p;
     size_t nodeSize;
 
