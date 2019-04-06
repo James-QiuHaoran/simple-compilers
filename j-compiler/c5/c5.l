@@ -1,67 +1,102 @@
 %{
 #include <stdlib.h>
+#include <ctype.h>
+
 #include "calc3.h"
 #include "y.tab.h"
+
 void yyerror(char *);
+
+char stringVarContent[1023]; // a string cannot exceed 1024 chars
 %}
+
+%x STR
 
 %%
 
-[a-z]       { 
-                yylval.sIndex = *yytext - 'a';
-                return VARIABLE;
-            }
+^[a-z]+[a-zA-Z0-9]*  { 
+                       // need to remove leading zeros? ^ -> ^[ \t\n]*
+                       // int idx = 0;
+                       // while (isspace(yytext[idx])) idx++;
 
-0           {
-                yylval.varValue = (long) atoi(yytext); /* yylval.iValue = atoi(yytext); */
-                return INTEGER;
-            }
+                       // lowercase
+                       char* res = yytext; // + idx if needed
+                       for ( ; *res; ++res) *res = tolower(*res);
 
-[1-9][0-9]* {
-                yylval.varValue = (long) atoi(yytext); /* yylval.iValue = atoi(yytext); */
-                return INTEGER;
-            }
+                       strcpy(yylval.sKey, yytext); // + idx if needed
+                       return LOCAL_VARIABLE;
+                     }
 
-'.?'        {
-                if (yyleng == 2)
-                    yylval.varValue = 0;  // empty
-                else
-                    yylval.varValue = (long) yytext[1];
-                return CHAR;
-            }
+$[a-z]+[a-zA-Z0-9]*  { 
+                       // lowercase
+                       char* res = yytext;
+                       for ( ; *res; ++res) *res = tolower(*res);
 
-\".*\"      {
-                yytext[yyleng - 1] = '\0';
-                yylval.varValue = (long) (yytext + 1);
-                return STRING;
-            }
+                       strcpy(yylval.sKey, yytext);
+                       return VARIABLE;
+                     }
 
-[-()<>=+*/] {
-                return *yytext;
-            }
+0                    {
+                       yylval.varValue = (long) atoi(yytext); /* yylval.iValue = atoi(yytext); */
+                       return INTEGER;
+                     }
 
-[;{}.%]     {
-                return *yytext;
-            }
+[1-9][0-9]*          {
+                       yylval.varValue = (long) atoi(yytext); /* yylval.iValue = atoi(yytext); */
+                       return INTEGER;
+                     }
 
-">="            return GE;
-"<="            return LE;
-"=="            return EQ;
-"!="            return NE;
-"for"           return FOR;
-"while"         return WHILE;
-"if"            return IF;
-"else"          return ELSE;
-"print"         return PRINT;
-"read"          return READ;
-"&&"            return AND;
-"||"            return OR;
+''                   { yylval.varValue = 0; return CHAR; }
+'\\n'                { yylval.varValue = (int) '\n'; return CHAR; }
+'\\t'                { yylval.varValue = (int) '\t'; return CHAR; }
+'\\a'                { yylval.varValue = (int) '\a'; return CHAR; }
+'\\b'                { yylval.varValue = (int) '\b'; return CHAR; }
+'\\''                { yylval.varValue = (int) '\''; return CHAR; }
+'\\v'                { yylval.varValue = (int) '\v'; return CHAR; }
+'\\f'                { yylval.varValue = (int) '\f'; return CHAR; }
+'\\r'                { yylval.varValue = (int) '\r'; return CHAR; }
+'[^']'               { yylval.varValue = (int) yytext[1]; return CHAR; }
 
-\/\/.*\n        ;   /* skip comments */
+\"                   { BEGIN STR; *stringVarContent = 0; }
+<STR>[^"\\]*         { strcat(stringVarContent, yytext); }
+<STR>\"              { strcpy(yylval.varStrValue, stringVarContent); BEGIN 0; return STRING; }
+<STR>\\\"            { strcat(stringVarContent, "\""); }
+<STR>\\              { strcat(stringVarContent, "\\"); }
+<STR>\\n             { strcat(stringVarContent, "\n"); }
+<STR>\\t             { strcat(stringVarContent, "\t"); }
+<STR>\\a             { strcat(stringVarContent, "\a"); }
+<STR>\\b             { strcat(stringVarContent, "\b"); }
 
-[ \t\n]+        ;   /* ignore whitespace */
+[-()<>=+*/;{}.%]     {
+                       return *yytext;
+                     }
 
-.               yyerror("Unknown character");
+">="                   return GE;
+"<="                   return LE;
+"=="                   return EQ;
+"!="                   return NE;
+"for"                  return FOR;
+"while"                return WHILE;
+"if"                   return IF;
+"else"                 return ELSE;
+"geti"                 return GETI;
+"getc"                 return GETC;
+"gets"                 return GETS;
+"puti"                 return PUTI;
+"putc"                 return PUTC;
+"puts"                 return PUTS;
+"puti_"                return PUTI_;
+"putc_"                return PUTC_;
+"puts_"                return PUTS_;
+"&&"                   return AND;
+"||"                   return OR;
+"return"               return RETURN;
+
+\/\/.*\n               ;   /* skip comments */
+
+[ \t\n]+               ;   /* ignore whitespace */
+
+.                      yyerror("Unknown character");
 
 %%
 
