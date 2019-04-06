@@ -23,7 +23,7 @@ char stringVarContent[1023]; // a string cannot exceed 1024 chars
                        char* res = yytext; // + idx if needed
                        for ( ; *res; ++res) *res = tolower(*res);
 
-                       strcpy(yylval.sKey, yytext); // + idx if needed
+                       strcpy(yylval.sIndex, yytext); // + idx if needed
                        return LOCAL_VARIABLE;
                      }
 
@@ -32,34 +32,34 @@ $[a-z]+[a-zA-Z0-9]*  {
                        char* res = yytext;
                        for ( ; *res; ++res) *res = tolower(*res);
 
-                       strcpy(yylval.sKey, yytext);
+                       strcpy(yylval.sIndex, yytext);
                        return VARIABLE;
                      }
 
 0                    {
-                       yylval.varValue = (long) atoi(yytext); /* yylval.iValue = atoi(yytext); */
+                       yylval.intValue = (long) atoi(yytext); /* yylval.iValue = atoi(yytext); */
                        return INTEGER;
                      }
 
 [1-9][0-9]*          {
-                       yylval.varValue = (long) atoi(yytext); /* yylval.iValue = atoi(yytext); */
+                       yylval.intValue = (long) atoi(yytext); /* yylval.iValue = atoi(yytext); */
                        return INTEGER;
                      }
 
-''                   { yylval.varValue = 0; return CHAR; }
-'\\n'                { yylval.varValue = (int) '\n'; return CHAR; }
-'\\t'                { yylval.varValue = (int) '\t'; return CHAR; }
-'\\a'                { yylval.varValue = (int) '\a'; return CHAR; }
-'\\b'                { yylval.varValue = (int) '\b'; return CHAR; }
-'\\''                { yylval.varValue = (int) '\''; return CHAR; }
-'\\v'                { yylval.varValue = (int) '\v'; return CHAR; }
-'\\f'                { yylval.varValue = (int) '\f'; return CHAR; }
-'\\r'                { yylval.varValue = (int) '\r'; return CHAR; }
-'[^']'               { yylval.varValue = (int) yytext[1]; return CHAR; }
+''                   { yylval.intValue = 0; return CHAR; }
+'\\n'                { yylval.intValue = (int) '\n'; return CHAR; }
+'\\t'                { yylval.intValue = (int) '\t'; return CHAR; }
+'\\a'                { yylval.intValue = (int) '\a'; return CHAR; }
+'\\b'                { yylval.intValue = (int) '\b'; return CHAR; }
+'\\''                { yylval.intValue = (int) '\''; return CHAR; }
+'\\v'                { yylval.intValue = (int) '\v'; return CHAR; }
+'\\f'                { yylval.intValue = (int) '\f'; return CHAR; }
+'\\r'                { yylval.intValue = (int) '\r'; return CHAR; }
+'[^']'               { yylval.intValue = (int) yytext[1]; return CHAR; }
 
 \"                   { BEGIN STR; *stringVarContent = 0; }
 <STR>[^"\\]*         { strcat(stringVarContent, yytext); }
-<STR>\"              { strcpy(yylval.varStrValue, stringVarContent); BEGIN 0; return STRING; }
+<STR>\"              { strcpy(yylval.strValue, stringVarContent); BEGIN 0; return STRING; }
 <STR>\\\"            { strcat(stringVarContent, "\""); }
 <STR>\\              { strcat(stringVarContent, "\\"); }
 <STR>\\n             { strcat(stringVarContent, "\n"); }
