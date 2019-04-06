@@ -3,8 +3,8 @@ all: c5i c5c nas
 c5i: lex.yy.c y.tab.c c5i.c
 	gcc -o c5i lex.yy.c y.tab.c c5i.c
 
-c5c: lex.yy.c y.tab.c c5c.c
-	gcc -o c5c lex.yy.c y.tab.c c5c.c
+c5c: lex.yy.c y.tab.c c5c.c strmap.c
+	gcc -o c5c lex.yy.c y.tab.c c5c.c strmap.c
 
 lex.yy.c: c5.l
 	flex c5.l
