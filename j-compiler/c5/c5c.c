@@ -64,15 +64,18 @@ int ex(nodeType *p, int nops, ...) {
             switch(p->con.type){
                 case varTypeInt:
                     // integer
-                    printf("\tpush\t%d\n", p->con.value); 
+                    if (!isScan)
+                        printf("\tpush\t%d\n", p->con.value); 
                     break;
                 case varTypeChar:
                     // char
-                    printf("\tpush\t\'%c\'\n", (char) p->con.value); 
+                    if (!isScan)
+                        printf("\tpush\t\'%c\'\n", (char) p->con.value); 
                     break;
                 case varTypeStr:
                     // string
-                    printf("\tpush\t\"%s\"\n", p->con.strValue); 
+                    if (!isScan)
+                        printf("\tpush\t\"%s\"\n", p->con.strValue); 
                     break;
                 case varTypeNil:
                     // nothing to be done
@@ -82,7 +85,8 @@ int ex(nodeType *p, int nops, ...) {
         // identifiers
         case typeId:      
             getRegName(regName, p->id.varName);
-            printf("\tpush\t%s\n", regName); 
+            if (!isScan)
+                printf("\tpush\t%s\n", regName); 
             break;
         // operators
         case typeOpr:
@@ -92,118 +96,149 @@ int ex(nodeType *p, int nops, ...) {
                     lbly = lbl++;
                     lblx = lbl++;
                     ex(p->opr.op[0], 1, lbl_kept);
-                    printf("L%03d:\n", lblx);
+                    if (!isScan)
+                        printf("L%03d:\n", lblx);
                     ex(p->opr.op[1], 1, lbl_kept);
-                    printf("\tj0\tL%03d\n", lbly);
+                    if (!isScan)
+                        printf("\tj0\tL%03d\n", lbly);
                     ex(p->opr.op[3], 1, lbl_init);
-                    printf("L%03d:\n", lblz); // for continue
+                    if (!isScan)
+                        printf("L%03d:\n", lblz); // for continue
                     ex(p->opr.op[2], 1, lbl_kept);
-                    printf("\tjmp\tL%03d\n", lblx);
-                    printf("L%03d:\n", lbly);
+                    if (!isScan)
+                        printf("\tjmp\tL%03d\n", lblx);
+                    if (!isScan)
+                        printf("L%03d:\n", lbly);
                     break;
                 case WHILE:
                     lbl1 = lbl++;
                     lbl2 = lbl++;
-                    printf("L%03d:\n", lbl1);
+                    if (!isScan)
+                        printf("L%03d:\n", lbl1);
                     ex(p->opr.op[0], 1, lbl_kept);
-                    printf("\tj0\tL%03d\n", lbl2);
+                    if (!isScan)
+                        printf("\tj0\tL%03d\n", lbl2);
                     ex(p->opr.op[1], 1, lbl_init);
-                    printf("\tjmp\tL%03d\n", lbl1);
-                    printf("L%03d:\n", lbl2);
+                    if (!isScan)
+                        printf("\tjmp\tL%03d\n", lbl1);
+                    if (!isScan)
+                        printf("L%03d:\n", lbl2);
                     break;
                 case IF:
                     lbl1 = lbl++;
                     ex(p->opr.op[0], 1, lbl_kept);
                     if (p->opr.nops > 2) {
                         lbl2 = lbl++;
-                        printf("\tj0\tL%03d\n", lbl1);
+                        if (!isScan)
+                            printf("\tj0\tL%03d\n", lbl1);
                         ex(p->opr.op[1], 1, lbl_kept);
-                        printf("\tjmp\tL%03d\n", lbl2);
-                        printf("L%03d:\n", lbl1);
+                        if (!isScan)
+                            printf("\tjmp\tL%03d\n", lbl2);
+                        if (!isScan)
+                            printf("L%03d:\n", lbl1);
                         ex(p->opr.op[2], 1, lbl_kept);
-                        printf("L%03d:\n", lbl2);
+                        if (!isScan)
+                            printf("L%03d:\n", lbl2);
                     } else {
-                        printf("\tj0\tL%03d\n", lbl1);
+                        if (!isScan)
+                            printf("\tj0\tL%03d\n", lbl1);
                         ex(p->opr.op[1], 1, lbl_kept);
-                        printf("L%03d:\n", lbl1);
+                        if (!isScan)
+                            printf("L%03d:\n", lbl1);
                     }
                     break;
                 case GETI:
-                    printf("\tgeti\n"); 
+                    if (!isScan)
+                        printf("\tgeti\n"); 
                     getRegName(regName, p->opr.op[0]->id.varName);
-                    printf("\tpop\t%s\n", regName); 
+                    if (!isScan)
+                        printf("\tpop\t%s\n", regName); 
                     break;
                 case GETC: 
-                    printf("\tgetc\n"); 
+                    if (!isScan)
+                        printf("\tgetc\n"); 
                     getRegName(regName, p->opr.op[0]->id.varName);
-                    printf("\tpop\t%s\n", regName); 
+                    if (!isScan)
+                        printf("\tpop\t%s\n", regName); 
                     break;
                 case GETS: 
-                    printf("\tgets\n"); 
+                    if (!isScan)
+                        printf("\tgets\n"); 
                     getRegName(regName, p->opr.op[0]->id.varName);
-                    printf("\tpop\t%s\n", regName); 
+                    if (!isScan)
+                        printf("\tpop\t%s\n", regName); 
                     break;
                 case PUTI: 
                     ex(p->opr.op[0], 1, lbl_kept);
-                    printf("\tputi\n");
+                    if (!isScan)
+                        printf("\tputi\n");
                     break;
                 case PUTI_:
                     ex(p->opr.op[0], 1, lbl_kept);
-                    printf("\tputi_\n");
+                    if (!isScan)
+                        printf("\tputi_\n");
                     break;
                 case PUTC: 
                     ex(p->opr.op[0], 1, lbl_kept);
-                    printf("\tputc\n");
+                    if (!isScan)
+                        printf("\tputc\n");
                     break;
                 case PUTC_:
                     ex(p->opr.op[0], 1, lbl_kept);
-                    printf("\tputc_\n");
+                    if (!isScan)
+                        printf("\tputc_\n");
                     break;
                 case PUTS: 
                     ex(p->opr.op[0], 1, lbl_kept);
-                    printf("\tputs\n"); 
+                    if (!isScan)
+                        printf("\tputs\n"); 
                     break;
                 case PUTS_:
                     ex(p->opr.op[0], 1, lbl_kept);
-                    printf("\tputs_\n");
+                    if (!isScan)
+                        printf("\tputs_\n");
                     break;
                 case '=':  
                     getRegName(regName, p->opr.op[0]->id.varName);
                     ex(p->opr.op[1], 1, lbl_kept);
                     if (p->opr.op[0]->type == typeId) {
-                        printf("\tpop\t%s\n", regName);
+                        if (!isScan)
+                            printf("\tpop\t%s\n", regName);
                     }
                     break;
                 case UMINUS:    
                     ex(p->opr.op[0], 1, lbl_kept);
-                    printf("\tneg\n");
+                    if (!isScan)
+                        printf("\tneg\n");
                     break;
                 case CALL:
                     numOfArgs = pushArgs(p->opr.op[1], lbl_kept);
                     getLabel(labelName, p->opr.op[0]->id.varName);
-                    printf("\tcall\t%s, %d\n", labelName, numOfArgs);
+                    if (!isScan)
+                        printf("\tcall\t%s, %d\n", labelName, numOfArgs);
                     break;
                 case RETURN:
                     ex(p->opr.op[0], 1, lbl_kept);
-                    printf("\tret\n");
+                    if (!isScan)
+                        printf("\tret\n");
                     break;
                 default:
                     ex(p->opr.op[0], 1, lbl_kept);
                     ex(p->opr.op[1], 1, lbl_kept);
                     switch(p->opr.oper) {
-                        case '+':   printf("\tadd\n"); break;
-                        case '-':   printf("\tsub\n"); break; 
-                        case '*':   printf("\tmul\n"); break;
-                        case '/':   printf("\tdiv\n"); break;
-                        case '%':   printf("\tmod\n"); break;
-                        case '<':   printf("\tcompLT\n"); break;
-                        case '>':   printf("\tcompGT\n"); break;
-                        case GE:    printf("\tcompGE\n"); break;
-                        case LE:    printf("\tcompLE\n"); break;
-                        case NE:    printf("\tcompNE\n"); break;
-                        case EQ:    printf("\tcompEQ\n"); break;
-                        case AND:   printf("\tand\n"); break;
-                        case OR:    printf("\tor\n"); break;
+                        case '+':   if (!isScan) printf("\tadd\n"); break;
+                        case '-':   if (!isScan) printf("\tsub\n"); break; 
+                        case '*':   if (!isScan) printf("\tmul\n"); break;
+                        case '/':   if (!isScan) printf("\tdiv\n"); break;
+                        case '%':   if (!isScan) printf("\tmod\n"); break;
+                        case '<':   if (!isScan) printf("\tcompLT\n"); break;
+                        case '>':   if (!isScan) printf("\tcompGT\n"); break;
+                        case GE:    if (!isScan) printf("\tcompGE\n"); break;
+                        case LE:    if (!isScan) printf("\tcompLE\n"); break;
+                        case NE:    if (!isScan) printf("\tcompNE\n"); break;
+                        case EQ:    if (!isScan) printf("\tcompEQ\n"); break;
+                        case AND:   if (!isScan) printf("\tand\n"); break;
+                        case OR:    if (!isScan) printf("\tor\n"); break;
                     }
             }
             break;
@@ -212,7 +247,8 @@ int ex(nodeType *p, int nops, ...) {
             createCallFrame(&p->func);
             ex(p->func.stmt, 1, lbl_kept);
             tearDownCallFrame(&p->func);
-            printf("\tret\n");
+            if (!isScan) 
+                printf("\tret\n");
             break;
     }
     return 0;

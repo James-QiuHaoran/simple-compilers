@@ -14,19 +14,6 @@ char stringVarContent[1023]; // a string cannot exceed 1024 chars
 
 %%
 
-^[a-z]+[a-zA-Z0-9]*  { 
-                       // need to remove leading zeros? ^ -> ^[ \t\n]*
-                       // int idx = 0;
-                       // while (isspace(yytext[idx])) idx++;
-
-                       // lowercase
-                       char* res = yytext; // + idx if needed
-                       for ( ; *res; ++res) *res = tolower(*res);
-
-                       strcpy(yylval.sIndex, yytext); // + idx if needed
-                       return LOCAL_VARIABLE;
-                     }
-
 $[a-z]+[a-zA-Z0-9]*  { 
                        // lowercase
                        char* res = yytext;
@@ -92,11 +79,24 @@ $[a-z]+[a-zA-Z0-9]*  {
 "||"                   return OR;
 "return"               return RETURN;
 
+[a-z]+[a-zA-Z0-9]*  { 
+                       // need to remove leading zeros? ^ -> ^[ \t\n]*
+                       // int idx = 0;
+                       // while (isspace(yytext[idx])) idx++;
+
+                       // lowercase
+                       char* res = yytext; // + idx if needed
+                       for ( ; *res; ++res) *res = tolower(*res);
+
+                       strcpy(yylval.sIndex, yytext); // + idx if needed
+                       return LOCAL_VARIABLE;
+                     }
+
 \/\/.*\n               ;   /* skip comments */
 
 [ \t\n]+               ;   /* ignore whitespace */
 
-.                      yyerror("Unknown character");
+.                      { printf("Unknown character: %s\n", yytext); }
 
 %%
 
