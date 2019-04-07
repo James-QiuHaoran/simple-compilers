@@ -17,9 +17,8 @@ nodeType *func(char* name, nodeType *args, nodeType *stmt);
 void freeNode(nodeType *p);
 void addNode(nodeLinkedListType* list, nodeType* node);
 
-void initialize();
-void terminate();
 void init();
+void start();
 void end();
 
 int ex(nodeType *p, int nops, ...);
@@ -62,7 +61,7 @@ nodeLinkedListType* stmts;
 %%
 
 program:
-          main_func                                        { initialize(); execute(); terminate(); }
+          main_func                                        { start(); execute(); end(); }
         ;
 
 main_func:  
@@ -142,7 +141,7 @@ expr:
         | expr AND expr                                    { $$ = opr(AND, 2, $1, $3); }
         | expr OR expr                                     { $$ = opr(OR, 2, $1, $3); }
         | '(' expr ')'                                     { $$ = $2; }
-        | VARIABLE '(' args ')' { $$ = opr(CALL, 2, nameToNode($1), $3); }
+        | VARIABLE '(' args ')'                            { $$ = opr(CALL, 2, nameToNode($1), $3); }
         ;
 
 args:   
@@ -275,21 +274,12 @@ void addNode(nodeLinkedListType* list, nodeType* node) {
 }
 
 void freeNode(nodeType *p) {
-    int i;
-
     if (!p) return;
     if (p->type == typeOpr) {
-        for (i = 0; i < p->opr.nops; i++)
+        for (int i = 0; i < p->opr.nops; i++)
             freeNode(p->opr.op[i]);
     }
     free(p);
-}
-
-void terminate() {
-    // terminate the compiler
-    end();
-
-    exit(0);
 }
 
 void yyerror(char *s) {

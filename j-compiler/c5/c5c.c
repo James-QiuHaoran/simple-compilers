@@ -17,7 +17,7 @@
 static int lbl;
 
 static int funcCallLevel;                       // level of function calls
-static StackSym* currentFrameSymTab;         // symbol table for current frame
+static StackSym* currentFrameSymTab;            // symbol table for current frame
 static int isScan;                              // 1: scanning; 0: execution
 
 static int reg[4];
@@ -35,7 +35,7 @@ void init();
 void end();
 void freeNode(nodeType *p);
 
-void initialize();
+void start();
 void preScan(nodeLinkedListType *list);
 void moveRegPointer(int regIdx, int offset);
 void makeRoomGlobalVariables();
@@ -206,6 +206,7 @@ int ex(nodeType *p, int nops, ...) {
                         case OR:    printf("\tor\n"); break;
                     }
             }
+            break;
         // functions
         case typeFunc:
             createCallFrame(&p->func);
@@ -273,7 +274,7 @@ int getRegName(char* regName, char* name) {
             sm_put(globalSym, name, regName);
             return 0;
         }
-    } else if (name[0] == '@') {
+    } else if (name[0] == '$') {
         name = name + 1;
         if (sm_exists(globalSym, name)) {
             sm_get(globalSym, name, regName, REG_NAME_L);
@@ -404,8 +405,8 @@ void end() {
     nodeInListType *trash = funcs->head;
 
     while (trash) {
-        funcs->head = trash->next;
         freeNode(trash->node);
+        funcs->head = trash->next;
         free(trash);
         trash = funcs->head;
     }
@@ -416,16 +417,19 @@ void end() {
     trash = stmts->head;
 
     while (trash) {
-        stmts->head = trash->next;
         freeNode(trash->node);
+        stmts->head = trash->next;
         free(trash);
         trash = stmts->head;
     }
 
     free(stmts);
+
+    // exit
+    exit(0);
 }
 
-void initialize() {
+void start() {
     preScan(stmts);
     preScan(funcs);
     makeRoomGlobalVariables();
