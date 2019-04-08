@@ -4,8 +4,10 @@
 #define LOCAL_SIZE 100
 #define FUNC_SIZE 100
 
-#define LABEL_NAME_L 6
-#define REG_NAME_L 100
+#define VAR_NAME_LEN 13
+#define STR_MAX_LEN 1024
+#define LAB_NAME_LEN 6
+#define REG_NAME_LEN 100
 
 typedef enum { typeCon, typeId, typeOpr, typeFunc } nodeEnum;
 typedef enum { varTypeInt, varTypeChar, varTypeStr, varTypeNil } varTypeEnum;
@@ -13,14 +15,14 @@ typedef enum { typeFuncList, typeStmtList } listTypeEnum;
 
 /* constants */
 typedef struct conNodeType {
-    int value;                 /* value of constant */
-    char strValue[1023];        /* string value, max 1023 chars*/
+    int value;                  /* value of constant */
+    char strValue[STR_MAX_LEN]; /* string value, max 1023 chars*/
     varTypeEnum type;
 } conNodeType;
 
 /* identifiers */
 typedef struct idNodeType {
-    char varName[12];           /* subscript to sym array */
+    char varName[VAR_NAME_LEN]; /* subscript to sym array */
     varTypeEnum type;
 } idNodeType;
 
@@ -33,7 +35,7 @@ typedef struct oprNodeType {
 
 /* functions */
 typedef struct funcNodeType {
-    char name[12];
+    char name[VAR_NAME_LEN];
     struct nodeTypeTag *args;
     struct nodeTypeTag *stmt;
     int num_args;

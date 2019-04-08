@@ -44,9 +44,9 @@ void makeRoomLocalVariables(funcNodeType* func);
 int ex(nodeType *p, int nops, ...) {
     int lblx, lbly, lblz, lbl1, lbl2, lbl_init = lbl, lbl_kept;
 
-    char regName[REG_NAME_L];
-    char labelName[LABEL_NAME_L];
-    char jmpLabelName[LABEL_NAME_L];
+    char regName[REG_NAME_LEN];
+    char labelName[LAB_NAME_LEN];
+    char jmpLabelName[LAB_NAME_LEN];
     int numOfArgs;
 
     // retrieve lbl_kept
@@ -273,7 +273,7 @@ void execute() {
         nodeType *curr = pfunc->node;
 
         // label function & register function name
-        char label[LABEL_NAME_L];
+        char label[LAB_NAME_LEN];
         int hasDeclared = getLabel(label, curr->func.name);
 
         // error checking [TODO]
@@ -289,7 +289,7 @@ void execute() {
 // retrieve function labels [TODO: refactor]
 int getLabel(char* labelName, char* name) {
     if (sm_exists(funcSym, name)) {
-        sm_get(funcSym, name, labelName, LABEL_NAME_L);
+        sm_get(funcSym, name, labelName, LAB_NAME_LEN);
         return 1;
     } else {
         sprintf(labelName, "L%03d", lbl++);
@@ -302,7 +302,7 @@ int getLabel(char* labelName, char* name) {
 int getRegName(char* regName, char* name) {
     if (funcCallLevel == 0) {
         if (sm_exists(globalSym, name)) {
-            sm_get(globalSym, name, regName, REG_NAME_L);
+            sm_get(globalSym, name, regName, REG_NAME_LEN);
             return 1;
         } else {
             int numOfGlobalVars = sm_get_count(globalSym);
@@ -313,7 +313,7 @@ int getRegName(char* regName, char* name) {
     } else if (name[0] == '$') {
         name = name + 1;
         if (sm_exists(globalSym, name)) {
-            sm_get(globalSym, name, regName, REG_NAME_L);
+            sm_get(globalSym, name, regName, REG_NAME_LEN);
             return 1;
         } else {
             int numOfGlobalVars = sm_get_count(globalSym);
@@ -323,7 +323,7 @@ int getRegName(char* regName, char* name) {
         }
     } else {
         if (sm_exists(currentFrameSymTab->symbol_table, name)) {
-            sm_get(currentFrameSymTab->symbol_table, name, regName, REG_NAME_L);
+            sm_get(currentFrameSymTab->symbol_table, name, regName, REG_NAME_LEN);
             return 1;
         } else {
             sprintf(regName, "fp[%d]", currentFrameSymTab->num_local_vars++);
@@ -360,7 +360,7 @@ void createCallFrame(funcNodeType* func) {
     // insert parameters into stack
     nodeType* paramList = func->args;
     int numOfParams = 0;
-    char regName[REG_NAME_L];
+    char regName[REG_NAME_LEN];
     while (paramList != NULL && paramList->type == typeOpr && paramList->opr.oper == ',') {
         sprintf(regName, "fp[%d]", -4 - numOfParams++);
         sm_put(currentFrameSymTab->symbol_table, paramList->opr.op[1]->id.varName, regName);
