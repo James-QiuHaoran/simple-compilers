@@ -27,7 +27,6 @@ void execute();                      // new statement and function list executio
 int yylex(void);
 void yyerror(char *s);
 
-int sym[26];                    /* symbol table */
 StrMap* globalSym;              /* global variable symbol table */
 StrMap* funcSym;                /* global function symbol table */
 StackSym* localSym;             /* local symbol table */
@@ -38,8 +37,8 @@ nodeLinkedListType* stmts;
 
 %union {
     int intValue;               /* integer value (int | char) */
-    char strValue[1023];        /* const value (string) */
-    char sIndex[12];            /* symbol table index */
+    char strValue[STR_MAX_LEN]; /* const value (string) */
+    char sIndex[VAR_NAME_LEN];  /* symbol table index */
     nodeType *nPtr;             /* node pointer */
 };
 
@@ -141,7 +140,7 @@ expr:
         | expr AND expr                                    { $$ = opr(AND, 2, $1, $3); }
         | expr OR expr                                     { $$ = opr(OR, 2, $1, $3); }
         | '(' expr ')'                                     { $$ = $2; }
-        | LOCAL_VARIABLE '(' args ')'                            { $$ = opr(CALL, 2, nameToNode($1), $3); }
+        | LOCAL_VARIABLE '(' args ')'                      { $$ = opr(CALL, 2, nameToNode($1), $3); }
         ;
 
 args:   
