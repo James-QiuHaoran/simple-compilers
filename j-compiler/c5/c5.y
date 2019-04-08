@@ -141,7 +141,7 @@ expr:
         | expr AND expr                                    { $$ = opr(AND, 2, $1, $3); }
         | expr OR expr                                     { $$ = opr(OR, 2, $1, $3); }
         | '(' expr ')'                                     { $$ = $2; }
-        | VARIABLE '(' args ')'                            { $$ = opr(CALL, 2, nameToNode($1), $3); }
+        | LOCAL_VARIABLE '(' args ')'                            { $$ = opr(CALL, 2, nameToNode($1), $3); }
         ;
 
 args:   

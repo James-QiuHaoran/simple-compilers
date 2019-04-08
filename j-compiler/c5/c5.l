@@ -54,7 +54,7 @@ $[a-z]+[a-zA-Z0-9]*  {
 <STR>\\a             { strcat(stringVarContent, "\a"); }
 <STR>\\b             { strcat(stringVarContent, "\b"); }
 
-[-()<>=+*/;{}.%]     {
+[-()<>=+*/;{}.%,]    {
                        return *yytext;
                      }
 
