@@ -14,15 +14,6 @@ char stringVarContent[1023]; // a string cannot exceed 1024 chars
 
 %%
 
-$[a-z]+[a-zA-Z0-9]*  { 
-                       // lowercase
-                       char* res = yytext;
-                       for ( ; *res; ++res) *res = tolower(*res);
-
-                       strcpy(yylval.sIndex, yytext);
-                       return VARIABLE;
-                     }
-
 0                    {
                        yylval.intValue = (long) atoi(yytext); /* yylval.iValue = atoi(yytext); */
                        return INTEGER;
@@ -79,17 +70,22 @@ $[a-z]+[a-zA-Z0-9]*  {
 "||"                   return OR;
 "return"               return RETURN;
 
-[a-z]+[a-zA-Z0-9]*  { 
-                       // need to remove leading zeros? ^ -> ^[ \t\n]*
-                       // int idx = 0;
-                       // while (isspace(yytext[idx])) idx++;
-
+^[a-z]+[a-zA-Z0-9]*  { 
                        // lowercase
                        char* res = yytext; // + idx if needed
                        for ( ; *res; ++res) *res = tolower(*res);
 
                        strcpy(yylval.sIndex, yytext); // + idx if needed
-                       return LOCAL_VARIABLE;
+                       return LEFT_VARIABLE;
+                     }
+
+$?[a-z]+[a-zA-Z0-9]*  { 
+                       // lowercase
+                       char* res = yytext;
+                       for ( ; *res; ++res) *res = tolower(*res);
+
+                       strcpy(yylval.sIndex, yytext);
+                       return RIGHT_VARIABLE;
                      }
 
 \/\/.*\n               ;   /* skip comments */

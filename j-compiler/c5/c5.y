@@ -44,7 +44,7 @@ nodeLinkedListType* stmts;
 
 %token <intValue> INTEGER CHAR
 %token <strValue> STRING
-%token <sIndex> VARIABLE LOCAL_VARIABLE
+%token <sIndex> LEFT_VARIABLE RIGHT_VARIABLE
 %token FOR WHILE IF RETURN CALL GETI GETC GETS PUTI PUTC PUTS PUTI_ PUTC_ PUTS_
 %nonassoc IFX
 %nonassoc ELSE
@@ -70,7 +70,7 @@ main_func:
         ;
 
 func:
-          LOCAL_VARIABLE '(' params ')' '{' stmt_list '}'  { $$ = func($1, $3, $6); }
+          LEFT_VARIABLE '(' params ')' '{' stmt_list '}'   { $$ = func($1, $3, $6); }
         ;
 
 params:
@@ -79,13 +79,18 @@ params:
         ;
 
 param:
-          variable                                         { $$ = $1; }
+          RIGHT_VARIABLE                                   { $$ = nameToNode($1); }
         | /* NULL */                                       { $$ = NULL; }
         ;
 
 variable:
-          VARIABLE                                         { $$ = nameToNode($1); }
-        | LOCAL_VARIABLE                                   { $$ = nameToNode($1); }
+          LEFT_VARIABLE                                    { $$ = nameToNode($1); }
+        | RIGHT_VARIABLE                                   { $$ = nameToNode($1); }
+        ;
+
+stmt_list:
+          stmt                                             { $$ = $1; }
+        | stmt_list stmt                                   { $$ = opr(';', 2, $1, $2); }
         ;
 
 stmt:
@@ -105,7 +110,7 @@ stmt:
         | WHILE '(' expr ')' stmt                          { $$ = opr(WHILE, 2, $3, $5); }
         | IF '(' expr ')' stmt %prec IFX                   { $$ = opr(IF, 2, $3, $5); }
         | IF '(' expr ')' stmt ELSE stmt                   { $$ = opr(IF, 3, $3, $5, $7); }
-        | LOCAL_VARIABLE '(' params ')' ';'                { $$ = opr(CALL, 2, nameToNode($1), $3); }
+        | LEFT_VARIABLE '(' params ')' ';'                 { $$ = opr(CALL, 2, nameToNode($1), $3); }
         | RETURN expr ';'                                  { $$ = opr(RETURN, 1, $2); }
         | '{' stmt_list '}'                                { $$ = $2; }
         ;
@@ -115,9 +120,9 @@ arg:
         | /* NULL */                                       { $$ = NULL; }
         ;
 
-stmt_list:
-          stmt                                             { $$ = $1; }
-        | stmt_list stmt                                   { $$ = opr(';', 2, $1, $2); }
+args:   
+          arg                                              { $$ = $1; }
+        | args ',' arg                                     { $$ = opr(',', 2, $1, $3); }
         ;
 
 expr:
@@ -140,12 +145,7 @@ expr:
         | expr AND expr                                    { $$ = opr(AND, 2, $1, $3); }
         | expr OR expr                                     { $$ = opr(OR, 2, $1, $3); }
         | '(' expr ')'                                     { $$ = $2; }
-        | LOCAL_VARIABLE '(' args ')'                      { $$ = opr(CALL, 2, nameToNode($1), $3); }
-        ;
-
-args:   
-          arg                                              { $$ = $1; }
-        | args ',' arg                                     { $$ = opr(',', 2, $1, $3); }
+        | RIGHT_VARIABLE '(' args ')'                      { $$ = opr(CALL, 2, nameToNode($1), $3); }
         ;
 
 %%
