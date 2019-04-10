@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdarg.h>
+
 #include "calc3.h"
 #include "y.tab.h"
 #include "strmap.h"
@@ -23,14 +24,6 @@ static int isScan;                              // 1: scanning; 0: execution
 static int reg[4];
 static char regNames[4][3] = {"sb", "fp", "in", "sp"};
 
-int getLabel(char* labelName, char* name);
-int getRegName(char* regName, char* name);
-
-int pushArgs(nodeType* argList, int lbl_kept);
-
-void createCallFrame(funcNodeType* func);
-void tearDownCallFrame(funcNodeType* func);
-
 void init();
 void end();
 void freeNode(nodeType *p);
@@ -41,6 +34,14 @@ void moveRegPointer(int regIdx, int offset);
 void makeRoomGlobalVariables();
 void makeRoomLocalVariables(funcNodeType* func);
 
+int getLabel(char* labelName, char* name);
+int getRegName(char* regName, char* name);
+
+int pushArgs(nodeType* argList, int lbl_kept);
+void createCallFrame(funcNodeType* func);
+void tearDownCallFrame(funcNodeType* func);
+
+// execution of AST on each node
 int ex(nodeType *p, int nops, ...) {
     int lblx, lbly, lblz, lbl1, lbl2, lbl_init = lbl, lbl_kept;
 
@@ -226,19 +227,19 @@ int ex(nodeType *p, int nops, ...) {
                     ex(p->opr.op[0], 1, lbl_kept);
                     ex(p->opr.op[1], 1, lbl_kept);
                     switch(p->opr.oper) {
-                        case '+':   if (!isScan) printf("\tadd\n"); break;
-                        case '-':   if (!isScan) printf("\tsub\n"); break; 
-                        case '*':   if (!isScan) printf("\tmul\n"); break;
-                        case '/':   if (!isScan) printf("\tdiv\n"); break;
-                        case '%':   if (!isScan) printf("\tmod\n"); break;
-                        case '<':   if (!isScan) printf("\tcompLT\n"); break;
-                        case '>':   if (!isScan) printf("\tcompGT\n"); break;
-                        case GE:    if (!isScan) printf("\tcompGE\n"); break;
-                        case LE:    if (!isScan) printf("\tcompLE\n"); break;
-                        case NE:    if (!isScan) printf("\tcompNE\n"); break;
-                        case EQ:    if (!isScan) printf("\tcompEQ\n"); break;
-                        case AND:   if (!isScan) printf("\tand\n"); break;
-                        case OR:    if (!isScan) printf("\tor\n"); break;
+                        case '+': if (!isScan) printf("\tadd\n"); break;
+                        case '-': if (!isScan) printf("\tsub\n"); break; 
+                        case '*': if (!isScan) printf("\tmul\n"); break;
+                        case '/': if (!isScan) printf("\tdiv\n"); break;
+                        case '%': if (!isScan) printf("\tmod\n"); break;
+                        case '<': if (!isScan) printf("\tcompLT\n"); break;
+                        case '>': if (!isScan) printf("\tcompGT\n"); break;
+                        case GE:  if (!isScan) printf("\tcompGE\n"); break;
+                        case LE:  if (!isScan) printf("\tcompLE\n"); break;
+                        case NE:  if (!isScan) printf("\tcompNE\n"); break;
+                        case EQ:  if (!isScan) printf("\tcompEQ\n"); break;
+                        case AND: if (!isScan) printf("\tand\n"); break;
+                        case OR:  if (!isScan) printf("\tor\n"); break;
                     }
             }
             break;
@@ -254,6 +255,7 @@ int ex(nodeType *p, int nops, ...) {
     return 0;
 }
 
+// execute AST
 void execute() {
     // statements
     nodeInListType *pstmt = stmts->head;
@@ -353,7 +355,7 @@ void createCallFrame(funcNodeType* func) {
 
     // create local symbol table
     StackSym* symTab = (StackSym*) malloc(sizeof(StackSym));
-    symTab->symbol_table = sm_new(LOCAL_SIZE);
+    symTab->symbol_table = sm_new(LOCAL_TAB_SIZE);
     symTab->lower = currentFrameSymTab;
     currentFrameSymTab = symTab;
 
@@ -413,16 +415,23 @@ void tearDownCallFrame(funcNodeType* func) {
 // program initialization for execution
 void init() {
     // init symbol tables
-    globalSym = sm_new(GLOBAL_SIZE);
-    funcSym = sm_new(FUNC_SIZE);
+    globalSym = sm_new(GLOBAL_TAB_SIZE);
+    funcSym = sm_new(FUNC_TAB_SIZE);
     localSym = (StackSym*) malloc(sizeof(StackSym));
     localSym->lower = NULL;
     localSym->symbol_table = NULL;
     currentFrameSymTab = localSym;
 
     // init function & statement lists
-    funcs = malloc(sizeof(nodeLinkedListType)); funcs->type = typeFuncList; funcs->num_nodes = 0; funcs->head = funcs->tail = NULL;
-    stmts = malloc(sizeof(nodeLinkedListType)); stmts->type = typeStmtList; stmts->num_nodes = 0; stmts->head = stmts->tail = NULL;
+    funcs = malloc(sizeof(nodeLinkedListType)); 
+    funcs->type = typeFuncList; 
+    funcs->num_nodes = 0; 
+    funcs->head = funcs->tail = NULL;
+
+    stmts = malloc(sizeof(nodeLinkedListType)); 
+    stmts->type = typeStmtList; 
+    stmts->num_nodes = 0; 
+    stmts->head = stmts->tail = NULL;
 
     // init pointer values
     SB = FP = IN = SP = 0;

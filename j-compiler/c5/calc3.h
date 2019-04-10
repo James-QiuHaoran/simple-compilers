@@ -1,13 +1,13 @@
 #include "strmap.h"
 
-#define GLOBAL_SIZE 100
-#define LOCAL_SIZE 100
-#define FUNC_SIZE 100
-
 #define VAR_NAME_LEN 13
 #define STR_MAX_LEN 1024
-#define LAB_NAME_LEN 6
-#define REG_NAME_LEN 100
+#define LAB_NAME_LEN 8
+#define REG_NAME_LEN 128
+
+#define GLOBAL_TAB_SIZE 256
+#define LOCAL_TAB_SIZE 256
+#define FUNC_TAB_SIZE 256
 
 typedef enum { typeCon, typeId, typeOpr, typeFunc } nodeEnum;
 typedef enum { varTypeInt, varTypeChar, varTypeStr, varTypeNil } varTypeEnum;
@@ -30,34 +30,35 @@ typedef struct idNodeType {
 typedef struct oprNodeType {
     int oper;                   /* operator */
     int nops;                   /* number of operands */
-    struct nodeTypeTag *op[1];  /* operands (expandable) */
+    struct nodeType *op[1];  /* operands (expandable) */
 } oprNodeType;
 
 /* functions */
 typedef struct funcNodeType {
     char name[VAR_NAME_LEN];
-    struct nodeTypeTag *args;
-    struct nodeTypeTag *stmt;
+    struct nodeType *args;
+    struct nodeType *stmt;
     int num_args;
     int num_local_vars;
 } funcNodeType;
 
-/* nodes, for funcs and stmts */
+/* linked list of nodes, for funcs and stmts */
 typedef struct nodeInListType {
-    struct nodeTypeTag *node;
+    struct nodeType *node;
     struct nodeInListType *next;
 } nodeInListType;
 
 /* linked lists, for funcs and stmts */
 typedef struct nodeLinkedListType {
-    listTypeEnum type;          /* type of node list */
-    int num_nodes;              /* number of nodes */
+    listTypeEnum type;
+    int num_nodes;
     struct nodeInListType *head;
     struct nodeInListType *tail;
 } nodeLinkedListType;
 
-typedef struct nodeTypeTag {
-    nodeEnum type;              /* type of node */
+/* nodes for constants, identifiers, operators, and funcs */
+typedef struct nodeType {
+    nodeEnum type;
 
     /* union must be last entry in nodeType */
     /* because operNodeType may dynamically increase */
@@ -69,6 +70,7 @@ typedef struct nodeTypeTag {
     };
 } nodeType;
 
+/* stacks - including symbol tables */
 typedef struct StackSym {
     StrMap *symbol_table;
     int num_args;

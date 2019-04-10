@@ -71,7 +71,7 @@ char stringVarContent[1023]; // a string cannot exceed 1024 chars
 "return"               return RETURN;
 
 ^[a-z]+[a-zA-Z0-9]*  { 
-                       // lowercase
+                       // change to lowercase letters
                        char* res = yytext; // + idx if needed
                        for ( ; *res; ++res) *res = tolower(*res);
 
@@ -79,8 +79,8 @@ char stringVarContent[1023]; // a string cannot exceed 1024 chars
                        return LEFT_VARIABLE;
                      }
 
-$?[a-z]+[a-zA-Z0-9]*  { 
-                       // lowercase
+$?[a-z]+[a-zA-Z0-9]* { 
+                       // change to lowercase letters
                        char* res = yytext;
                        for ( ; *res; ++res) *res = tolower(*res);
 

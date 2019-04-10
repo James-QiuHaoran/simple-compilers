@@ -8,10 +8,10 @@
 
 /* prototypes */
 nodeType *opr(int oper, int nops, ...);
-nodeType *id(int i);                         // original
-nodeType *nameToNode(char* name);            // new
-nodeType *con(int value);                    // original
-nodeType *var(long value, varTypeEnum type); // new
+nodeType *id(int i);                         // original - c4
+nodeType *nameToNode(char* name);            // new - c5
+nodeType *con(int value);                    // original - c4
+nodeType *var(long value, varTypeEnum type); // new - c5
 nodeType *func(char* name, nodeType *args, nodeType *stmt);
 
 void freeNode(nodeType *p);
@@ -22,7 +22,7 @@ void start();
 void end();
 
 int ex(nodeType *p, int nops, ...);
-void execute();                      // new statement and function list execution
+void execute();                 // statement and function list execution
 
 int yylex(void);
 void yyerror(char *s);
