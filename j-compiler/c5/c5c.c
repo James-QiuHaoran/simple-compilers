@@ -17,7 +17,7 @@
 
 static int lbl;
 
-static int funcCallLevel;                       // level of function calls
+static int flevel;                       // level of function calls
 static StackSym* currentFrameSymTab;            // symbol table for current frame
 static int isScan;                              // 1: scanning; 0: execution
 
@@ -302,7 +302,7 @@ int getLabel(char* labelName, char* name) {
 
 // retrieve register name [TODO: refactor]
 int getRegName(char* regName, char* name) {
-    if (funcCallLevel == 0) {
+    if (flevel == 0) {
         // main function -> global variable
         if (sm_exists(globalSym, name)) {
             sm_get(globalSym, name, regName, REG_NAME_LEN);
@@ -315,14 +315,13 @@ int getRegName(char* regName, char* name) {
         }
     } else if (name[0] == '$') {
         // declare global variables inside a function
-        name = name + 1;
-        if (sm_exists(globalSym, name)) {
-            sm_get(globalSym, name, regName, REG_NAME_LEN);
+        if (sm_exists(globalSym, name + 1)) {
+            sm_get(globalSym, name + 1, regName, REG_NAME_LEN);
             return 1;
         } else {
             int numOfGlobalVars = sm_get_count(globalSym);
             sprintf(regName, "sb[%d]", numOfGlobalVars);
-            sm_put(globalSym, name, regName);
+            sm_put(globalSym, name + 1, regName);
             return 0;
         }
     } else {
@@ -359,7 +358,7 @@ int pushArgs(nodeType* argList, int lbl_kept) {
 
 void createCallFrame(funcNodeType* func) {
     // deepen function call level
-    funcCallLevel++;
+    flevel++;
 
     // create local symbol table
     StackSym* symTab = (StackSym*) malloc(sizeof(StackSym));
@@ -412,7 +411,7 @@ void tearDownCallFrame(funcNodeType* func) {
         func->num_local_vars = numOfLocalVars;
 
     // clean up
-    funcCallLevel--;
+    flevel--;
 
     StackSym* prevFrameSymTab = currentFrameSymTab->lower;
     sm_delete(currentFrameSymTab->symbol_table);
