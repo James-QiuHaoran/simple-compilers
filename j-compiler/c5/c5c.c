@@ -303,6 +303,7 @@ int getLabel(char* labelName, char* name) {
 // retrieve register name [TODO: refactor]
 int getRegName(char* regName, char* name) {
     if (funcCallLevel == 0) {
+        // main function -> global variable
         if (sm_exists(globalSym, name)) {
             sm_get(globalSym, name, regName, REG_NAME_LEN);
             return 1;
@@ -313,6 +314,7 @@ int getRegName(char* regName, char* name) {
             return 0;
         }
     } else if (name[0] == '$') {
+        // declare global variables inside a function
         name = name + 1;
         if (sm_exists(globalSym, name)) {
             sm_get(globalSym, name, regName, REG_NAME_LEN);
@@ -324,10 +326,16 @@ int getRegName(char* regName, char* name) {
             return 0;
         }
     } else {
+        // first lookup whether the variable exists in local symbol table
         if (sm_exists(currentFrameSymTab->symbol_table, name)) {
             sm_get(currentFrameSymTab->symbol_table, name, regName, REG_NAME_LEN);
             return 1;
+        } else if (sm_exists(globalSym, name)) {
+            // then check whether it's in the global symbol table
+            sm_get(globalSym, name, regName, REG_NAME_LEN);
+            return 1;
         } else {
+            // otherwise create the local variable in the local table
             sprintf(regName, "fp[%d]", currentFrameSymTab->num_local_vars++);
             sm_put(currentFrameSymTab->symbol_table, name, regName);
             return 0;
