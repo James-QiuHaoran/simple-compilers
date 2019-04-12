@@ -17,16 +17,12 @@ L000:
 	puti
 	ret
 L001:
-	push	sp
-	push	1
-	add
-	pop	sp
 	push	fp[-4]
 	push	1
 	add
-	pop	fp[0]
-	push	fp[0]
+	pop	sb[0]
+	push	sb[0]
 	puti
-	push	fp[0]
+	push	sb[0]
 	ret
 	ret
