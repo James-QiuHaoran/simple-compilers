@@ -4,7 +4,7 @@
 #include <stdarg.h>
 
 #include "calc3.h"
-#include "strmap.h"
+#include "strmap.h" // hash table for strings
 
 /* prototypes */
 nodeType *opr(int oper, int nops, ...);
@@ -14,19 +14,23 @@ nodeType *con(int value);                    // original - c4
 nodeType *var(long value, varTypeEnum type); // new - c5
 nodeType *func(char* name, nodeType *args, nodeType *stmt);
 
+/* node management */
 void freeNode(nodeType *p);
 void addNode(nodeLinkedListType* list, nodeType* node);
 
+/* auxiliary functions */
 void init();
 void start();
 void end();
 
+/* execution functions */
 int ex(nodeType *p, int nops, ...);
 void execute();                 // statement and function list execution
 
 int yylex(void);
 void yyerror(char *s);
 
+/* data */
 StrMap* globalSym;              /* global variable symbol table */
 StrMap* funcSym;                /* global function symbol table */
 StackSym* localSym;             /* local symbol table */
@@ -252,6 +256,7 @@ nodeType *opr(int oper, int nops, ...) {
     return p;
 }
 
+// add the node to the tail of the linked list
 void addNode(nodeLinkedListType* list, nodeType* node) {
     nodeInListType *p;
 
@@ -259,25 +264,37 @@ void addNode(nodeLinkedListType* list, nodeType* node) {
     if ((p = malloc(sizeof(nodeInListType))) == NULL)
         yyerror("out of memory");
 
-    // linked list
+    // node to be added to the end of the linked list
     p->node = node;
     p->next = NULL;
+
     if (list->tail) {
+        // if there's node before
         list->tail->next = p;
         list->tail = p;
     } else {
+        // if there's no node
         list->head = p;
         list->tail = p;
     }
+
+    // update the number of nodes
     list->num_nodes++;
 }
 
+// free memory created for the node
 void freeNode(nodeType *p) {
     if (!p) return;
+    
     if (p->type == typeOpr) {
-        for (int i = 0; i < p->opr.nops; i++)
+        for (int i = 0; i < p->opr.nops; i++) {
             freeNode(p->opr.op[i]);
+        }
+    } else if (p->type == typeFunc) {
+        freeNode(p->func.args);
+        freeNode(p->func.stmt);
     }
+
     free(p);
 }
 

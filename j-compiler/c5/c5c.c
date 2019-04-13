@@ -15,31 +15,30 @@
 #define IN reg[IN_I]
 #define SP reg[SP_I]
 
-static int lbl;
-
-static int flevel;                       // level of function calls
-static StackSym* currentFrameSymTab;            // symbol table for current frame
-static int isScan;                              // 1: scanning; 0: execution
-
 static int reg[4];
 static char regNames[4][3] = {"sb", "fp", "in", "sp"};
 
+static int lbl;
+
+static int isScan;                              // stage 1: scanning; stage 0: execution
+static int flevel;                              // current function call level
+static StackSym* currentFrameSymTab;            // symbol table for the current frame
+
+/* program init & end functions */
 void init();
 void end();
 void freeNode(nodeType *p);
-
 void start();
-void preScan(nodeLinkedListType *list);
-void moveRegPointer(int regIdx, int offset);
-void makeRoomGlobalVariables();
-void makeRoomLocalVariables(funcNodeType* func);
+void scan(nodeLinkedListType *list);
 
+/* helper functions */
+void mvRegPtr(int regIdx, int offset);
 int getLabel(char* labelName, char* name);
-int getRegName(char* regName, char* name);
+int getRegister(char* regName, char* name);
 
-int pushArgs(nodeType* argList, int lbl_kept);
-void createCallFrame(funcNodeType* func);
-void tearDownCallFrame(funcNodeType* func);
+int pushArgsOnStack(nodeType* argList, int lbl_kept);
+void constructFuncFrame(funcNodeType* func);
+void destructFuncFrame(funcNodeType* func);
 
 // execution of AST on each node
 int ex(nodeType *p, int nops, ...) {
@@ -85,7 +84,7 @@ int ex(nodeType *p, int nops, ...) {
             break;
         // identifiers
         case typeId:      
-            getRegName(regName, p->id.varName);
+            getRegister(regName, p->id.varName);
             if (!isScan)
                 printf("\tpush\t%s\n", regName); 
             break;
@@ -151,21 +150,21 @@ int ex(nodeType *p, int nops, ...) {
                 case GETI:
                     if (!isScan)
                         printf("\tgeti\n"); 
-                    getRegName(regName, p->opr.op[0]->id.varName);
+                    getRegister(regName, p->opr.op[0]->id.varName);
                     if (!isScan)
                         printf("\tpop\t%s\n", regName); 
                     break;
                 case GETC: 
                     if (!isScan)
                         printf("\tgetc\n"); 
-                    getRegName(regName, p->opr.op[0]->id.varName);
+                    getRegister(regName, p->opr.op[0]->id.varName);
                     if (!isScan)
                         printf("\tpop\t%s\n", regName); 
                     break;
                 case GETS: 
                     if (!isScan)
                         printf("\tgets\n"); 
-                    getRegName(regName, p->opr.op[0]->id.varName);
+                    getRegister(regName, p->opr.op[0]->id.varName);
                     if (!isScan)
                         printf("\tpop\t%s\n", regName); 
                     break;
@@ -200,7 +199,7 @@ int ex(nodeType *p, int nops, ...) {
                         printf("\tputs_\n");
                     break;
                 case '=':  
-                    getRegName(regName, p->opr.op[0]->id.varName);
+                    getRegister(regName, p->opr.op[0]->id.varName);
                     ex(p->opr.op[1], 1, lbl_kept);
                     if (p->opr.op[0]->type == typeId) {
                         if (!isScan)
@@ -213,7 +212,7 @@ int ex(nodeType *p, int nops, ...) {
                         printf("\tneg\n");
                     break;
                 case CALL:
-                    numOfArgs = pushArgs(p->opr.op[1], lbl_kept);
+                    numOfArgs = pushArgsOnStack(p->opr.op[1], lbl_kept);
                     getLabel(labelName, p->opr.op[0]->id.varName);
                     if (!isScan)
                         printf("\tcall\t%s, %d\n", labelName, numOfArgs);
@@ -245,9 +244,9 @@ int ex(nodeType *p, int nops, ...) {
             break;
         // functions
         case typeFunc:
-            createCallFrame(&p->func);
+            constructFuncFrame(&p->func);
             ex(p->func.stmt, 1, lbl_kept);
-            tearDownCallFrame(&p->func);
+            destructFuncFrame(&p->func);
             if (!isScan) 
                 printf("\tret\n");
             break;
@@ -301,7 +300,7 @@ int getLabel(char* labelName, char* name) {
 }
 
 // retrieve register name [TODO: refactor]
-int getRegName(char* regName, char* name) {
+int getRegister(char* regName, char* name) {
     if (flevel == 0) {
         // main function -> global variable
         if (sm_exists(globalSym, name)) {
@@ -343,7 +342,7 @@ int getRegName(char* regName, char* name) {
 }
 
 // return number of arguments
-int pushArgs(nodeType* argList, int lbl_kept) {
+int pushArgsOnStack(nodeType* argList, int lbl_kept) {
     if (argList == NULL) return 0;
 
     if (argList->type != typeOpr || argList->opr.oper != ',') {
@@ -351,12 +350,12 @@ int pushArgs(nodeType* argList, int lbl_kept) {
         return 1;
     }
 
-    int numOfArgs = pushArgs(argList->opr.op[0], lbl_kept);
+    int numOfArgs = pushArgsOnStack(argList->opr.op[0], lbl_kept);
     ex(argList->opr.op[1], 1, lbl_kept);
     return 1 + numOfArgs;
 }
 
-void createCallFrame(funcNodeType* func) {
+void constructFuncFrame(funcNodeType* func) {
     // deepen function call level
     flevel++;
 
@@ -394,10 +393,14 @@ void createCallFrame(funcNodeType* func) {
     currentFrameSymTab->num_local_vars = 0;
 
     // push space onto stack for local variables
-    if (!isScan) makeRoomLocalVariables(func);
+    if (!isScan) {
+        if (func->num_local_vars) {
+            mvRegPtr(SP_I, func->num_local_vars);
+        }
+    }
 }
 
-void tearDownCallFrame(funcNodeType* func) {
+void destructFuncFrame(funcNodeType* func) {
     // keep variable information if scanning
     int numOfLocalVars = currentFrameSymTab->num_local_vars;
     if (!isScan) {
@@ -482,12 +485,17 @@ void end() {
 }
 
 void start() {
-    preScan(stmts);
-    preScan(funcs);
-    makeRoomGlobalVariables();
+    scan(stmts);
+    scan(funcs);
+
+    // make room for global variables
+    int numOfGlobalVars = sm_get_count(globalSym);
+    if (numOfGlobalVars) {
+        mvRegPtr(SP_I, numOfGlobalVars);
+    }
 }
 
-void preScan(nodeLinkedListType *list) {
+void scan(nodeLinkedListType *list) {
     isScan = 1;
 
     nodeInListType *p = list->head;
@@ -501,19 +509,10 @@ void preScan(nodeLinkedListType *list) {
     isScan = 0;
 }
 
-void moveRegPointer(int regIdx, int offset) {
+void mvRegPtr(int regIdx, int offset) {
     printf("\tpush\t%s\n", regNames[regIdx]);
     printf("\tpush\t%d\n", offset);
     printf("\tadd\n");
     printf("\tpop\t%s\n", regNames[regIdx]);
     reg[regIdx] += offset;
-}
-
-void makeRoomGlobalVariables() {
-    int numOfGlobalVars = sm_get_count(globalSym);
-    if (numOfGlobalVars) moveRegPointer(SP_I, numOfGlobalVars);
-}
-
-void makeRoomLocalVariables(funcNodeType* func) {
-    if (func->num_local_vars) moveRegPointer(SP_I, func->num_local_vars);
 }
