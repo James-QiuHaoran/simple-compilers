@@ -1,24 +1,26 @@
 #include <stdio.h>
 #include <stdarg.h>
+#include <errno.h>
 
 #include "calc3.h"
 #include "y.tab.h"
 #include "strmap.h"
 
-#define SB_I 0
-#define FP_I 1
-#define IN_I 2
-#define SP_I 3
+#define SB_ID 0
+#define FP_ID 1
+#define IN_ID 2
+#define SP_ID 3
 
-#define SB reg[SB_I]
-#define FP reg[FP_I]
-#define IN reg[IN_I]
-#define SP reg[SP_I]
+#define SB reg[SB_ID]
+#define FP reg[FP_ID]
+#define IN reg[IN_ID]
+#define SP reg[SP_ID]
 
 static int reg[4];
-static char regNames[4][3] = {"sb", "fp", "in", "sp"};
+static char regLabels[4][3] = {"sb", "fp", "in", "sp"};
 
 static int lbl;
+extern int errno;
 
 static int isScan;                              // stage 1: scanning; stage 0: execution
 static int flevel;                              // current function call level
@@ -32,11 +34,11 @@ void start();
 void scan(nodeLinkedListType *list);
 
 /* helper functions */
-void mvRegPtr(int regIdx, int offset);
-int getLabel(char* labelName, char* name);
-int getRegister(char* regName, char* name);
+void mvRegPtr(int idx, int offset);
+int getLabel(char* label, char* name);
+int getRegister(char* reg, char* name);
 
-int pushArgsOnStack(nodeType* argList, int lbl_kept);
+int pushArgsOnStack(nodeType* args, int lbl_kept);
 void constructFuncFrame(funcNodeType* func);
 void destructFuncFrame(funcNodeType* func);
 
@@ -277,84 +279,92 @@ void execute() {
         char label[LAB_NAME_LEN];
         int hasDeclared = getLabel(label, curr->func.name);
 
-        // error checking [TODO]
-        printf("%s:\n", label);
+        // error checking
+        if (hasDeclared == 1) {
+            // function has been declared
+            printf("%s:\n", label);
+        } else {
+            // unknown functions
+            fprintf(stderr, "Undeclared functions [errno: %d]\n", errno);
+            exit(1);
+        }
 
         ex(curr, 0);
         pfunc = pfunc->next; 
     }
 }
 
-/* Utility Functions */
-
-// retrieve function labels [TODO: refactor]
-int getLabel(char* labelName, char* name) {
+// retrieve function label names
+int getLabel(char* label, char* name) {
     if (sm_exists(funcSym, name)) {
-        sm_get(funcSym, name, labelName, LAB_NAME_LEN);
+        sm_get(funcSym, name, label, LAB_NAME_LEN);
         return 1;
     } else {
-        sprintf(labelName, "L%03d", lbl++);
-        sm_put(funcSym, name, labelName);
+        sprintf(label, "L%03d", lbl++);
+        sm_put(funcSym, name, label);
         return 0;
     }
 }
 
-// retrieve register name [TODO: refactor]
-int getRegister(char* regName, char* name) {
+// retrieve register name
+int getRegister(char* reg, char* name) {
     if (flevel == 0) {
         // main function -> global variable
         if (sm_exists(globalSym, name)) {
-            sm_get(globalSym, name, regName, REG_NAME_LEN);
+            sm_get(globalSym, name, reg, REG_NAME_LEN);
             return 1;
         } else {
             int numOfGlobalVars = sm_get_count(globalSym);
-            sprintf(regName, "sb[%d]", numOfGlobalVars);
-            sm_put(globalSym, name, regName);
+            sprintf(reg, "sb[%d]", numOfGlobalVars);
+            sm_put(globalSym, name, reg);
             return 0;
         }
     } else if (name[0] == '$') {
         // declare global variables inside a function
         if (sm_exists(globalSym, name + 1)) {
-            sm_get(globalSym, name + 1, regName, REG_NAME_LEN);
+            sm_get(globalSym, name + 1, reg, REG_NAME_LEN);
             return 1;
         } else {
             int numOfGlobalVars = sm_get_count(globalSym);
-            sprintf(regName, "sb[%d]", numOfGlobalVars);
-            sm_put(globalSym, name + 1, regName);
+            sprintf(reg, "sb[%d]", numOfGlobalVars);
+            sm_put(globalSym, name + 1, reg);
             return 0;
         }
     } else {
         // first lookup whether the variable exists in local symbol table
         if (sm_exists(currentFrameSymTab->symbol_table, name)) {
-            sm_get(currentFrameSymTab->symbol_table, name, regName, REG_NAME_LEN);
+            sm_get(currentFrameSymTab->symbol_table, name, reg, REG_NAME_LEN);
             return 1;
         } else if (sm_exists(globalSym, name)) {
             // then check whether it's in the global symbol table
-            sm_get(globalSym, name, regName, REG_NAME_LEN);
+            sm_get(globalSym, name, reg, REG_NAME_LEN);
             return 1;
         } else {
             // otherwise create the local variable in the local table
-            sprintf(regName, "fp[%d]", currentFrameSymTab->num_local_vars++);
-            sm_put(currentFrameSymTab->symbol_table, name, regName);
+            sprintf(reg, "fp[%d]", currentFrameSymTab->num_local_vars++);
+            sm_put(currentFrameSymTab->symbol_table, name, reg);
             return 0;
         }
     }
 }
 
 // return number of arguments
-int pushArgsOnStack(nodeType* argList, int lbl_kept) {
-    if (argList == NULL) return 0;
+int pushArgsOnStack(nodeType* args, int lbl_kept) {
+    if (args == NULL) 
+        return 0;
 
-    if (argList->type != typeOpr || argList->opr.oper != ',') {
-        ex(argList, 1, lbl_kept);       
+    if (args->type != typeOpr || args->opr.oper != ',') {
+        ex(args, 1, lbl_kept);       
         return 1;
     }
 
-    int numOfArgs = pushArgsOnStack(argList->opr.op[0], lbl_kept);
-    ex(argList->opr.op[1], 1, lbl_kept);
+    int numOfArgs = pushArgsOnStack(args->opr.op[0], lbl_kept);
+    ex(args->opr.op[1], 1, lbl_kept);
+
     return 1 + numOfArgs;
 }
 
+// [TODO]
 void constructFuncFrame(funcNodeType* func) {
     // deepen function call level
     flevel++;
@@ -384,9 +394,9 @@ void constructFuncFrame(funcNodeType* func) {
         // execution
         if (numOfParams != func->num_args) {
             // error
-            printf("ERROR\n");
+            fprintf(stderr, "Number of parameters mismatch [errno: %d]\n", errno);
+            exit(1);
         }
-        // assert(numOfParams == func->num_args);
     } else 
         func->num_args = numOfParams;
     currentFrameSymTab->num_args = numOfParams;
@@ -400,6 +410,7 @@ void constructFuncFrame(funcNodeType* func) {
     }
 }
 
+// [TODO]
 void destructFuncFrame(funcNodeType* func) {
     // keep variable information if scanning
     int numOfLocalVars = currentFrameSymTab->num_local_vars;
@@ -407,8 +418,8 @@ void destructFuncFrame(funcNodeType* func) {
         // execution
         if (numOfLocalVars != func->num_local_vars) {
             // error
-            printf("ERROR\n");
-            // assert(numOfLocalVars == func->num_local_vars);
+            fprintf(stderr, "Number of local variables mismatch [errno: %d]\n", errno);
+            exit(1);
         }
     } else 
         func->num_local_vars = numOfLocalVars;
@@ -427,6 +438,7 @@ void init() {
     // init symbol tables
     globalSym = sm_new(GLOBAL_TAB_SIZE);
     funcSym = sm_new(FUNC_TAB_SIZE);
+
     localSym = (StackSym*) malloc(sizeof(StackSym));
     localSym->lower = NULL;
     localSym->symbol_table = NULL;
@@ -484,6 +496,7 @@ void end() {
     exit(0);
 }
 
+// start to compile: scanning
 void start() {
     scan(stmts);
     scan(funcs);
@@ -491,10 +504,11 @@ void start() {
     // make room for global variables
     int numOfGlobalVars = sm_get_count(globalSym);
     if (numOfGlobalVars) {
-        mvRegPtr(SP_I, numOfGlobalVars);
+        mvRegPtr(SP_ID, numOfGlobalVars);
     }
 }
 
+// scanner
 void scan(nodeLinkedListType *list) {
     isScan = 1;
 
@@ -509,10 +523,12 @@ void scan(nodeLinkedListType *list) {
     isScan = 0;
 }
 
-void mvRegPtr(int regIdx, int offset) {
-    printf("\tpush\t%s\n", regNames[regIdx]);
+// move register pointer
+void mvRegPtr(int idx, int offset) {
+    printf("\tpush\t%s\n", regLabels[idx]);
     printf("\tpush\t%d\n", offset);
     printf("\tadd\n");
-    printf("\tpop\t%s\n", regNames[regIdx]);
-    reg[regIdx] += offset;
+    printf("\tpop\t%s\n", regLabels[idx]);
+
+    reg[idx] += offset;
 }
