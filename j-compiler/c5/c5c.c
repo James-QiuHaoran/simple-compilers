@@ -24,7 +24,6 @@ extern int errno;
 
 static int isScan;                              // stage 1: scanning; stage 0: execution
 static int flevel;                              // current function call level
-static StackSym* currentFrameSymTab;            // symbol table for the current frame
 
 /* program init & end functions */
 void init();
@@ -332,8 +331,8 @@ int getRegister(char* reg, char* name) {
         }
     } else {
         // first lookup whether the variable exists in local symbol table
-        if (sm_exists(currentFrameSymTab->symbol_table, name)) {
-            sm_get(currentFrameSymTab->symbol_table, name, reg, REG_NAME_LEN);
+        if (sm_exists(localSym->symbol_table, name)) {
+            sm_get(localSym->symbol_table, name, reg, REG_NAME_LEN);
             return 1;
         } else if (sm_exists(globalSym, name)) {
             // then check whether it's in the global symbol table
@@ -341,8 +340,8 @@ int getRegister(char* reg, char* name) {
             return 1;
         } else {
             // otherwise create the local variable in the local table
-            sprintf(reg, "fp[%d]", currentFrameSymTab->num_local_vars++);
-            sm_put(currentFrameSymTab->symbol_table, name, reg);
+            sprintf(reg, "fp[%d]", localSym->num_local_vars++);
+            sm_put(localSym->symbol_table, name, reg);
             return 0;
         }
     }
@@ -372,8 +371,8 @@ void constructFuncFrame(funcNodeType* func) {
     // create local symbol table
     StackSym* symTab = (StackSym*) malloc(sizeof(StackSym));
     symTab->symbol_table = sm_new(LOCAL_TAB_SIZE);
-    symTab->lower = currentFrameSymTab;
-    currentFrameSymTab = symTab;
+    symTab->lower = localSym;
+    localSym = symTab;
 
     // insert parameters into stack
     nodeType* paramList = func->args;
@@ -381,12 +380,12 @@ void constructFuncFrame(funcNodeType* func) {
     char regName[REG_NAME_LEN];
     while (paramList != NULL && paramList->type == typeOpr && paramList->opr.oper == ',') {
         sprintf(regName, "fp[%d]", -4 - numOfParams++);
-        sm_put(currentFrameSymTab->symbol_table, paramList->opr.op[1]->id.varName, regName);
+        sm_put(localSym->symbol_table, paramList->opr.op[1]->id.varName, regName);
         paramList = paramList->opr.op[0];
     }
     if (paramList != NULL) {
         sprintf(regName, "fp[%d]", -4 - numOfParams++);
-        sm_put(currentFrameSymTab->symbol_table, paramList->id.varName, regName);
+        sm_put(localSym->symbol_table, paramList->id.varName, regName);
     }
 
     // store meta data
@@ -399,13 +398,13 @@ void constructFuncFrame(funcNodeType* func) {
         }
     } else 
         func->num_args = numOfParams;
-    currentFrameSymTab->num_args = numOfParams;
-    currentFrameSymTab->num_local_vars = 0;
+    localSym->num_args = numOfParams;
+    localSym->num_local_vars = 0;
 
     // push space onto stack for local variables
     if (!isScan) {
         if (func->num_local_vars) {
-            mvRegPtr(SP_I, func->num_local_vars);
+            mvRegPtr(SP_ID, func->num_local_vars);
         }
     }
 }
@@ -413,7 +412,7 @@ void constructFuncFrame(funcNodeType* func) {
 // [TODO]
 void destructFuncFrame(funcNodeType* func) {
     // keep variable information if scanning
-    int numOfLocalVars = currentFrameSymTab->num_local_vars;
+    int numOfLocalVars = localSym->num_local_vars;
     if (!isScan) {
         // execution
         if (numOfLocalVars != func->num_local_vars) {
@@ -427,10 +426,10 @@ void destructFuncFrame(funcNodeType* func) {
     // clean up
     flevel--;
 
-    StackSym* prevFrameSymTab = currentFrameSymTab->lower;
-    sm_delete(currentFrameSymTab->symbol_table);
-    free(currentFrameSymTab);
-    currentFrameSymTab = prevFrameSymTab;
+    StackSym* prevFrameSymTab = localSym->lower;
+    sm_delete(localSym->symbol_table);
+    free(localSym);
+    localSym = prevFrameSymTab;
 }
 
 // program initialization for execution
@@ -442,7 +441,6 @@ void init() {
     localSym = (StackSym*) malloc(sizeof(StackSym));
     localSym->lower = NULL;
     localSym->symbol_table = NULL;
-    currentFrameSymTab = localSym;
 
     // init function & statement lists
     funcs = malloc(sizeof(nodeLinkedListType)); 
