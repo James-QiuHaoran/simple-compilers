@@ -19,11 +19,11 @@
 static int reg[4];
 static char regLabels[4][3] = {"sb", "fp", "in", "sp"};
 
-static int lbl;
-extern int errno;
+static int lbl;       // 
+extern int errno;     // error number
 
-static int isScan;                              // stage 1: scanning; stage 0: execution
-static int flevel;                              // current function call level
+static int scanning;  // 1 for scanning; 0 for execution
+static int flevel;    // current function call level
 
 /* program init & end functions */
 void init();
@@ -45,10 +45,10 @@ void destructFuncFrame(funcNodeType* func);
 int ex(nodeType *p, int nops, ...) {
     int lblx, lbly, lblz, lbl1, lbl2, lbl_init = lbl, lbl_kept;
 
-    char regName[REG_NAME_LEN];
+    char reg[REG_NAME_LEN];
     char labelName[LAB_NAME_LEN];
     char jmpLabelName[LAB_NAME_LEN];
-    int numOfArgs;
+    int num_args;
 
     // retrieve lbl_kept
     va_list ap;
@@ -65,17 +65,17 @@ int ex(nodeType *p, int nops, ...) {
             switch(p->con.type){
                 case varTypeInt:
                     // integer
-                    if (!isScan)
+                    if (!scanning)
                         printf("\tpush\t%d\n", p->con.value); 
                     break;
                 case varTypeChar:
                     // char
-                    if (!isScan)
+                    if (!scanning)
                         printf("\tpush\t\'%c\'\n", (char) p->con.value); 
                     break;
                 case varTypeStr:
                     // string
-                    if (!isScan)
+                    if (!scanning)
                         printf("\tpush\t\"%s\"\n", p->con.strValue); 
                     break;
                 case varTypeNil:
@@ -85,9 +85,9 @@ int ex(nodeType *p, int nops, ...) {
             break;
         // identifiers
         case typeId:      
-            getRegister(regName, p->id.varName);
-            if (!isScan)
-                printf("\tpush\t%s\n", regName); 
+            getRegister(reg, p->id.varName);
+            if (!scanning)
+                printf("\tpush\t%s\n", reg); 
             break;
         // operators
         case typeOpr:
@@ -97,32 +97,32 @@ int ex(nodeType *p, int nops, ...) {
                     lbly = lbl++;
                     lblx = lbl++;
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!isScan)
+                    if (!scanning)
                         printf("L%03d:\n", lblx);
                     ex(p->opr.op[1], 1, lbl_kept);
-                    if (!isScan)
+                    if (!scanning)
                         printf("\tj0\tL%03d\n", lbly);
                     ex(p->opr.op[3], 1, lbl_init);
-                    if (!isScan)
+                    if (!scanning)
                         printf("L%03d:\n", lblz); // for continue
                     ex(p->opr.op[2], 1, lbl_kept);
-                    if (!isScan)
+                    if (!scanning)
                         printf("\tjmp\tL%03d\n", lblx);
-                    if (!isScan)
+                    if (!scanning)
                         printf("L%03d:\n", lbly);
                     break;
                 case WHILE:
                     lbl1 = lbl++;
                     lbl2 = lbl++;
-                    if (!isScan)
+                    if (!scanning)
                         printf("L%03d:\n", lbl1);
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!isScan)
+                    if (!scanning)
                         printf("\tj0\tL%03d\n", lbl2);
                     ex(p->opr.op[1], 1, lbl_init);
-                    if (!isScan)
+                    if (!scanning)
                         printf("\tjmp\tL%03d\n", lbl1);
-                    if (!isScan)
+                    if (!scanning)
                         printf("L%03d:\n", lbl2);
                     break;
                 case IF:
@@ -130,116 +130,116 @@ int ex(nodeType *p, int nops, ...) {
                     ex(p->opr.op[0], 1, lbl_kept);
                     if (p->opr.nops > 2) {
                         lbl2 = lbl++;
-                        if (!isScan)
+                        if (!scanning)
                             printf("\tj0\tL%03d\n", lbl1);
                         ex(p->opr.op[1], 1, lbl_kept);
-                        if (!isScan)
+                        if (!scanning)
                             printf("\tjmp\tL%03d\n", lbl2);
-                        if (!isScan)
+                        if (!scanning)
                             printf("L%03d:\n", lbl1);
                         ex(p->opr.op[2], 1, lbl_kept);
-                        if (!isScan)
+                        if (!scanning)
                             printf("L%03d:\n", lbl2);
                     } else {
-                        if (!isScan)
+                        if (!scanning)
                             printf("\tj0\tL%03d\n", lbl1);
                         ex(p->opr.op[1], 1, lbl_kept);
-                        if (!isScan)
+                        if (!scanning)
                             printf("L%03d:\n", lbl1);
                     }
                     break;
                 case GETI:
-                    if (!isScan)
+                    if (!scanning)
                         printf("\tgeti\n"); 
-                    getRegister(regName, p->opr.op[0]->id.varName);
-                    if (!isScan)
-                        printf("\tpop\t%s\n", regName); 
+                    getRegister(reg, p->opr.op[0]->id.varName);
+                    if (!scanning)
+                        printf("\tpop\t%s\n", reg); 
                     break;
                 case GETC: 
-                    if (!isScan)
+                    if (!scanning)
                         printf("\tgetc\n"); 
-                    getRegister(regName, p->opr.op[0]->id.varName);
-                    if (!isScan)
-                        printf("\tpop\t%s\n", regName); 
+                    getRegister(reg, p->opr.op[0]->id.varName);
+                    if (!scanning)
+                        printf("\tpop\t%s\n", reg); 
                     break;
                 case GETS: 
-                    if (!isScan)
+                    if (!scanning)
                         printf("\tgets\n"); 
-                    getRegister(regName, p->opr.op[0]->id.varName);
-                    if (!isScan)
-                        printf("\tpop\t%s\n", regName); 
+                    getRegister(reg, p->opr.op[0]->id.varName);
+                    if (!scanning)
+                        printf("\tpop\t%s\n", reg); 
                     break;
                 case PUTI: 
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!isScan)
+                    if (!scanning)
                         printf("\tputi\n");
                     break;
                 case PUTI_:
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!isScan)
+                    if (!scanning)
                         printf("\tputi_\n");
                     break;
                 case PUTC: 
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!isScan)
+                    if (!scanning)
                         printf("\tputc\n");
                     break;
                 case PUTC_:
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!isScan)
+                    if (!scanning)
                         printf("\tputc_\n");
                     break;
                 case PUTS: 
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!isScan)
+                    if (!scanning)
                         printf("\tputs\n"); 
                     break;
                 case PUTS_:
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!isScan)
+                    if (!scanning)
                         printf("\tputs_\n");
                     break;
                 case '=':  
-                    getRegister(regName, p->opr.op[0]->id.varName);
+                    getRegister(reg, p->opr.op[0]->id.varName);
                     ex(p->opr.op[1], 1, lbl_kept);
                     if (p->opr.op[0]->type == typeId) {
-                        if (!isScan)
-                            printf("\tpop\t%s\n", regName);
+                        if (!scanning)
+                            printf("\tpop\t%s\n", reg);
                     }
                     break;
                 case UMINUS:    
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!isScan)
+                    if (!scanning)
                         printf("\tneg\n");
                     break;
                 case CALL:
-                    numOfArgs = pushArgsOnStack(p->opr.op[1], lbl_kept);
+                    num_args = pushArgsOnStack(p->opr.op[1], lbl_kept);
                     getLabel(labelName, p->opr.op[0]->id.varName);
-                    if (!isScan)
-                        printf("\tcall\t%s, %d\n", labelName, numOfArgs);
+                    if (!scanning)
+                        printf("\tcall\t%s, %d\n", labelName, num_args);
                     break;
                 case RETURN:
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!isScan)
+                    if (!scanning)
                         printf("\tret\n");
                     break;
                 default:
                     ex(p->opr.op[0], 1, lbl_kept);
                     ex(p->opr.op[1], 1, lbl_kept);
                     switch(p->opr.oper) {
-                        case '+': if (!isScan) printf("\tadd\n"); break;
-                        case '-': if (!isScan) printf("\tsub\n"); break; 
-                        case '*': if (!isScan) printf("\tmul\n"); break;
-                        case '/': if (!isScan) printf("\tdiv\n"); break;
-                        case '%': if (!isScan) printf("\tmod\n"); break;
-                        case '<': if (!isScan) printf("\tcompLT\n"); break;
-                        case '>': if (!isScan) printf("\tcompGT\n"); break;
-                        case GE:  if (!isScan) printf("\tcompGE\n"); break;
-                        case LE:  if (!isScan) printf("\tcompLE\n"); break;
-                        case NE:  if (!isScan) printf("\tcompNE\n"); break;
-                        case EQ:  if (!isScan) printf("\tcompEQ\n"); break;
-                        case AND: if (!isScan) printf("\tand\n"); break;
-                        case OR:  if (!isScan) printf("\tor\n"); break;
+                        case '+': if (!scanning) printf("\tadd\n"); break;
+                        case '-': if (!scanning) printf("\tsub\n"); break; 
+                        case '*': if (!scanning) printf("\tmul\n"); break;
+                        case '/': if (!scanning) printf("\tdiv\n"); break;
+                        case '%': if (!scanning) printf("\tmod\n"); break;
+                        case '<': if (!scanning) printf("\tcompLT\n"); break;
+                        case '>': if (!scanning) printf("\tcompGT\n"); break;
+                        case GE:  if (!scanning) printf("\tcompGE\n"); break;
+                        case LE:  if (!scanning) printf("\tcompLE\n"); break;
+                        case NE:  if (!scanning) printf("\tcompNE\n"); break;
+                        case EQ:  if (!scanning) printf("\tcompEQ\n"); break;
+                        case AND: if (!scanning) printf("\tand\n"); break;
+                        case OR:  if (!scanning) printf("\tor\n"); break;
                     }
             }
             break;
@@ -248,7 +248,7 @@ int ex(nodeType *p, int nops, ...) {
             constructFuncFrame(&p->func);
             ex(p->func.stmt, 1, lbl_kept);
             destructFuncFrame(&p->func);
-            if (!isScan) 
+            if (!scanning) 
                 printf("\tret\n");
             break;
     }
@@ -276,10 +276,14 @@ void execute() {
 
         // label function & register function name
         char label[LAB_NAME_LEN];
-        int hasDeclared = getLabel(label, curr->func.name);
+        int ret = getLabel(label, curr->func.name);
 
         // error checking
-        if (hasDeclared == 1) {
+        if (ret == -1) {
+            // function name the same as the variable declared
+            fprintf(stderr, "Function cannot have the same name as the variable declared [errno: %d]\n", errno);
+            exit(1);
+        } else if (ret == 1) {
             // function has been declared
             printf("%s:\n", label);
         } else {
@@ -295,12 +299,18 @@ void execute() {
 
 // retrieve function label names
 int getLabel(char* label, char* name) {
-    if (sm_exists(funcSym, name)) {
-        sm_get(funcSym, name, label, LAB_NAME_LEN);
-        return 1;
+    if (sm_exists(func_sym_tab, name)) {
+        sm_get(func_sym_tab, name, label, LAB_NAME_LEN);
+        if (!sm_exists(global_sym_tab, name)) {
+            // success
+            return 1;
+        } else {
+            // function name the same as variable name
+            return -1;
+        }
     } else {
         sprintf(label, "L%03d", lbl++);
-        sm_put(funcSym, name, label);
+        sm_put(func_sym_tab, name, label);
         return 0;
     }
 }
@@ -309,39 +319,37 @@ int getLabel(char* label, char* name) {
 int getRegister(char* reg, char* name) {
     if (flevel == 0) {
         // main function -> global variable
-        if (sm_exists(globalSym, name)) {
-            sm_get(globalSym, name, reg, REG_NAME_LEN);
+        if (sm_exists(global_sym_tab, name)) {
+            sm_get(global_sym_tab, name, reg, REG_NAME_LEN);
             return 1;
         } else {
-            int numOfGlobalVars = sm_get_count(globalSym);
-            sprintf(reg, "sb[%d]", numOfGlobalVars);
-            sm_put(globalSym, name, reg);
+            sprintf(reg, "sb[%d]", sm_get_count(global_sym_tab));
+            sm_put(global_sym_tab, name, reg);
             return 0;
         }
     } else if (name[0] == '$') {
         // declare global variables inside a function
-        if (sm_exists(globalSym, name + 1)) {
-            sm_get(globalSym, name + 1, reg, REG_NAME_LEN);
+        if (sm_exists(global_sym_tab, name + 1)) {
+            sm_get(global_sym_tab, name + 1, reg, REG_NAME_LEN);
             return 1;
         } else {
-            int numOfGlobalVars = sm_get_count(globalSym);
-            sprintf(reg, "sb[%d]", numOfGlobalVars);
-            sm_put(globalSym, name + 1, reg);
+            sprintf(reg, "sb[%d]", sm_get_count(global_sym_tab));
+            sm_put(global_sym_tab, name + 1, reg);
             return 0;
         }
     } else {
         // first lookup whether the variable exists in local symbol table
-        if (sm_exists(localSym->symbol_table, name)) {
-            sm_get(localSym->symbol_table, name, reg, REG_NAME_LEN);
+        if (sm_exists(local_sym_tab->symbol_table, name)) {
+            sm_get(local_sym_tab->symbol_table, name, reg, REG_NAME_LEN);
             return 1;
-        } else if (sm_exists(globalSym, name)) {
+        } else if (sm_exists(global_sym_tab, name)) {
             // then check whether it's in the global symbol table
-            sm_get(globalSym, name, reg, REG_NAME_LEN);
+            sm_get(global_sym_tab, name, reg, REG_NAME_LEN);
             return 1;
         } else {
             // otherwise create the local variable in the local table
-            sprintf(reg, "fp[%d]", localSym->num_local_vars++);
-            sm_put(localSym->symbol_table, name, reg);
+            sprintf(reg, "fp[%d]", local_sym_tab->num_local_vars++);
+            sm_put(local_sym_tab->symbol_table, name, reg);
             return 0;
         }
     }
@@ -357,90 +365,109 @@ int pushArgsOnStack(nodeType* args, int lbl_kept) {
         return 1;
     }
 
-    int numOfArgs = pushArgsOnStack(args->opr.op[0], lbl_kept);
+    int num_args = pushArgsOnStack(args->opr.op[0], lbl_kept);
     ex(args->opr.op[1], 1, lbl_kept);
 
-    return 1 + numOfArgs;
+    num_args += 1;
+
+    return num_args;
 }
 
-// [TODO]
+// create a frame for a function
 void constructFuncFrame(funcNodeType* func) {
-    // deepen function call level
+    // increment the level of function call
     flevel++;
 
-    // create local symbol table
+    // init
     StackSym* symTab = (StackSym*) malloc(sizeof(StackSym));
+
     symTab->symbol_table = sm_new(LOCAL_TAB_SIZE);
-    symTab->lower = localSym;
-    localSym = symTab;
+    symTab->lower = local_sym_tab;
+    
+    char reg[REG_NAME_LEN];
 
-    // insert parameters into stack
-    nodeType* paramList = func->args;
-    int numOfParams = 0;
-    char regName[REG_NAME_LEN];
-    while (paramList != NULL && paramList->type == typeOpr && paramList->opr.oper == ',') {
-        sprintf(regName, "fp[%d]", -4 - numOfParams++);
-        sm_put(localSym->symbol_table, paramList->opr.op[1]->id.varName, regName);
-        paramList = paramList->opr.op[0];
-    }
-    if (paramList != NULL) {
-        sprintf(regName, "fp[%d]", -4 - numOfParams++);
-        sm_put(localSym->symbol_table, paramList->id.varName, regName);
+    // current local symbol table
+    local_sym_tab = symTab;
+
+    // push arguments on the stack
+    int num_params = 0;
+    int idx_fp = 0;
+    nodeType* params = func->args;
+
+    while (params != NULL && params->type == typeOpr && params->opr.oper == ',') {
+        idx_fp = -4 - num_params++;
+        sprintf(reg, "fp[%d]", idx_fp);
+        sm_put(local_sym_tab->symbol_table, params->opr.op[1]->id.varName, reg);
+        params = params->opr.op[0];
     }
 
-    // store meta data
-    if (!isScan) {
+    if (params != NULL) {
+        idx_fp = -4 - num_params++;
+        sprintf(reg, "fp[%d]", idx_fp);
+        sm_put(local_sym_tab->symbol_table, params->id.varName, reg);
+    }
+
+    // check and save meta data
+    if (!scanning) {
         // execution
-        if (numOfParams != func->num_args) {
+        if (num_params != func->num_args) {
             // error
             fprintf(stderr, "Number of parameters mismatch [errno: %d]\n", errno);
             exit(1);
         }
-    } else 
-        func->num_args = numOfParams;
-    localSym->num_args = numOfParams;
-    localSym->num_local_vars = 0;
+    } else {
+        // scanning
+        func->num_args = num_params;
+    }
 
-    // push space onto stack for local variables
-    if (!isScan) {
+    local_sym_tab->num_args = num_params;
+    local_sym_tab->num_local_vars = 0;
+
+    // move stack pointer for local variables in the function
+    if (!scanning) {
         if (func->num_local_vars) {
             mvRegPtr(SP_ID, func->num_local_vars);
         }
     }
 }
 
-// [TODO]
+// destruct the function frame created
 void destructFuncFrame(funcNodeType* func) {
-    // keep variable information if scanning
-    int numOfLocalVars = localSym->num_local_vars;
-    if (!isScan) {
+    int num_local_vars = local_sym_tab->num_local_vars;
+
+    if (!scanning) {
         // execution
-        if (numOfLocalVars != func->num_local_vars) {
+        if (num_local_vars != func->num_local_vars) {
             // error
             fprintf(stderr, "Number of local variables mismatch [errno: %d]\n", errno);
             exit(1);
         }
-    } else 
-        func->num_local_vars = numOfLocalVars;
+    } else {
+        // scanning
+        func->num_local_vars = num_local_vars;
+    }
 
-    // clean up
+    // decrement function level after execution
     flevel--;
 
-    StackSym* prevFrameSymTab = localSym->lower;
-    sm_delete(localSym->symbol_table);
-    free(localSym);
-    localSym = prevFrameSymTab;
+    // delete the function frame
+    StackSym* prev = local_sym_tab->lower;
+    sm_delete(local_sym_tab->symbol_table);
+    free(local_sym_tab);
+
+    // update current frame
+    local_sym_tab = prev;
 }
 
 // program initialization for execution
 void init() {
     // init symbol tables
-    globalSym = sm_new(GLOBAL_TAB_SIZE);
-    funcSym = sm_new(FUNC_TAB_SIZE);
+    global_sym_tab = sm_new(GLOBAL_TAB_SIZE);
+    func_sym_tab = sm_new(FUNC_TAB_SIZE);
 
-    localSym = (StackSym*) malloc(sizeof(StackSym));
-    localSym->lower = NULL;
-    localSym->symbol_table = NULL;
+    local_sym_tab = (StackSym*) malloc(sizeof(StackSym));
+    local_sym_tab->lower = NULL;
+    local_sym_tab->symbol_table = NULL;
 
     // init function & statement lists
     funcs = malloc(sizeof(nodeLinkedListType)); 
@@ -460,11 +487,11 @@ void init() {
 // terminate and wrap up
 void end() {
     // delete symbol tables
-    sm_delete(globalSym);
-    sm_delete(funcSym);
+    sm_delete(global_sym_tab);
+    sm_delete(func_sym_tab);
 
     // free the local symbol table
-    free(localSym);
+    free(local_sym_tab);
 
     // free the node lists for functions
     nodeInListType *trash = funcs->head;
@@ -500,7 +527,7 @@ void start() {
     scan(funcs);
 
     // make room for global variables
-    int numOfGlobalVars = sm_get_count(globalSym);
+    int numOfGlobalVars = sm_get_count(global_sym_tab);
     if (numOfGlobalVars) {
         mvRegPtr(SP_ID, numOfGlobalVars);
     }
@@ -508,7 +535,7 @@ void start() {
 
 // scanner
 void scan(nodeLinkedListType *list) {
-    isScan = 1;
+    scanning = 1;
 
     nodeInListType *p = list->head;
 
@@ -518,7 +545,7 @@ void scan(nodeLinkedListType *list) {
         p = p->next; 
     }
 
-    isScan = 0;
+    scanning = 0;
 }
 
 // move register pointer

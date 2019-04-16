@@ -31,9 +31,9 @@ int yylex(void);
 void yyerror(char *s);
 
 /* data */
-StrMap* globalSym;              /* global variable symbol table */
-StrMap* funcSym;                /* global function symbol table */
-StackSym* localSym;             /* local symbol table */
+StrMap* global_sym_tab;         /* global variable symbol table */
+StackSym* local_sym_tab;        /* local varaible symbol table */
+StrMap* func_sym_tab;           /* global function symbol table */
 
 nodeLinkedListType* funcs;   
 nodeLinkedListType* stmts;

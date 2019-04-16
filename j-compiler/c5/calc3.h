@@ -80,9 +80,9 @@ typedef struct StackSym {
 } StackSym;
 
 /* symbol tables */
-extern StrMap* globalSym;
-extern StrMap* funcSym;
-extern StackSym* localSym;
+extern StrMap* global_sym_tab;
+extern StrMap* func_sym_tab;
+extern StackSym* local_sym_tab;
 
 /* stack list (functions and statements) */
 extern nodeLinkedListType* funcs;
