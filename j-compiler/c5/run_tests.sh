@@ -49,4 +49,5 @@ do
 	counter=$((counter+1))
 done
 
+echo "----------"
 echo "All $counter tests: $pass passed, $fail failed"
