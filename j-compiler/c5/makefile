@@ -1,7 +1,4 @@
-all: c5i c5c nas
-
-c5i: lex.yy.c y.tab.c c5i.c
-	gcc -o c5i lex.yy.c y.tab.c c5i.c
+all: c5c nas
 
 c5c: lex.yy.c y.tab.c c5c.c strmap.c
 	gcc -o c5c lex.yy.c y.tab.c c5c.c strmap.c
@@ -22,11 +19,11 @@ nas.tab.c: nas.y
 	bison -d nas.y
 
 cleanc5:
-	$(RM) lex.yy.c y.tab.c y.tab.h c5i c5c
+	$(RM) lex.yy.c y.tab.c y.tab.h c5c
 
 cleannas:
 	$(RM) nas.c nas.tab.c nas.tab.h nas
 
 clean:
-	$(RM) lex.yy.c y.tab.c y.tab.h c5i c5c
+	$(RM) lex.yy.c y.tab.c y.tab.h c5c
 	$(RM) nas.c nas.tab.c nas.tab.h nas
