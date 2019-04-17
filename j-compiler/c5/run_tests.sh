@@ -15,23 +15,21 @@ do
 	echo ""
 	printf ">>>> Result:\n\n"
 
-	if [ "$counter" -eq "0" ]
+	if [ "$counter" -eq "3" ]
 	then
 		echo "3" | ./nas test/${i:5:4}.nas > output
-	elif [ "$counter" -eq "1" ]
+	elif [ "$counter" -eq "4" ]
 	then
 		echo "c" | ./nas test/${i:5:4}.nas > output
-	elif [ "$counter" -eq "2" ]
+	elif [ "$counter" -eq "5" ]
 	then
 		echo "test" | ./nas test/${i:5:4}.nas > output
 	else
 		./nas test/${i:5:4}.nas > output
 	fi
 
-	echo ""
-	
 	cat output
-	printf ">>>> Sample answer:\n\n"
+	printf "\n>>>> Sample answer:\n\n"
 	cat test/${i:5:4}.ans
 	
 	if diff output test/${i:5:4}.ans >/dev/null
