@@ -11,30 +11,30 @@
 	push	sb[0]
 	push	sb[1]
 	compGE
-	j0	L005
+	j0	L000
 	push	"a>b"
 	puts
 	push	sb[0]
 	push	sb[1]
 	compEQ
-	j0	L007
+	j0	L002
 	push	"a==b"
 	puts
-L007:
-	jmp	L006
-L005:
+L002:
+	jmp	L001
+L000:
 	push	"a<b"
 	puts
-L006:
+L001:
 	push	sb[2]
 	push	sb[0]
 	compLT
-	j0	L008
+	j0	L003
 	push	"c<a"
 	puts
-	jmp	L009
-L008:
+	jmp	L004
+L003:
 	push	"c>=a"
 	puts
-L009:
+L004:
 	end
