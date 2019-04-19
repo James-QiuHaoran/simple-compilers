@@ -33,7 +33,7 @@ int ex(nodeType *p, int nops, ...) {
     int lbl1, lbl2, lbl_init = lbl, lbl_kept;
 
     char reg[REG_NAME_LEN];
-    char labelName[LAB_NAME_LEN];
+    char labelName[LBL_NAME_LEN];
     int num_args;
 
     // retrieve lbl_kept
@@ -51,15 +51,15 @@ int ex(nodeType *p, int nops, ...) {
             switch(p->con.type){
                 case varTypeInt:
                     // integer
-                    if (!scanning) printf("\tpush\t%d\n", p->con.value); 
+                    if (!scanning) fprintf(stdout, "\tpush\t%d\n", p->con.value); 
                     break;
                 case varTypeChar:
                     // char
-                    if (!scanning) printf("\tpush\t\'%c\'\n", (char) p->con.value); 
+                    if (!scanning) fprintf(stdout, "\tpush\t\'%c\'\n", (char) p->con.value); 
                     break;
                 case varTypeStr:
                     // string
-                    if (!scanning) printf("\tpush\t\"%s\"\n", p->con.strValue); 
+                    if (!scanning) fprintf(stdout, "\tpush\t\"%s\"\n", p->con.strValue); 
                     break;
                 case varTypeNil:
                     // nothing to be done
@@ -69,123 +69,117 @@ int ex(nodeType *p, int nops, ...) {
         // identifiers
         case typeId:      
             getRegister(reg, p->id.varName);
-            if (!scanning) printf("\tpush\t%s\n", reg); 
+            if (!scanning) fprintf(stdout, "\tpush\t%s\n", reg); 
             break;
         // operators
         case typeOpr:
             switch(p->opr.oper) {
                 case FOR:
-                    lbl2 = lbl++;
-                    lbl1 = lbl++;
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!scanning) { printf("L%03d:\n", lbl1); }
+                    if (!scanning) { fprintf(stdout, "L%03d:\n", lbl1 = lbl++); }
                     ex(p->opr.op[1], 1, lbl_kept);
-                    if (!scanning) { printf("\tj0\tL%03d\n", lbl2); }
+                    if (!scanning) { fprintf(stdout, "\tj0\tL%03d\n", lbl2 = lbl++); }
                     ex(p->opr.op[3], 1, lbl_init);
                     ex(p->opr.op[2], 1, lbl_kept);
-                    if (!scanning) { printf("\tjmp\tL%03d\n", lbl1); printf("L%03d:\n", lbl2); }
+                    if (!scanning) { fprintf(stdout, "\tjmp\tL%03d\n", lbl1); fprintf(stdout, "L%03d:\n", lbl2); }
                     break;
                 case WHILE:
-                    lbl1 = lbl++;
-                    lbl2 = lbl++;
-                    if (!scanning) { printf("L%03d:\n", lbl1); }
+                    if (!scanning) { fprintf(stdout, "L%03d:\n", lbl1 = lbl++); }
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!scanning) { printf("\tj0\tL%03d\n", lbl2); }
+                    if (!scanning) { fprintf(stdout, "\tj0\tL%03d\n", lbl2 = lbl++); }
                     ex(p->opr.op[1], 1, lbl_init);
-                    if (!scanning) { printf("\tjmp\tL%03d\n", lbl1); printf("L%03d:\n", lbl2); }
+                    if (!scanning) { fprintf(stdout, "\tjmp\tL%03d\n", lbl1); fprintf(stdout, "L%03d:\n", lbl2); }
                     break;
                 case IF:
-                    lbl1 = lbl++;
                     ex(p->opr.op[0], 1, lbl_kept);
                     if (p->opr.nops > 2) {
-                        lbl2 = lbl++;
-                        if (!scanning) { printf("\tj0\tL%03d\n", lbl1); }
+                        if (!scanning) { fprintf(stdout, "\tj0\tL%03d\n", lbl1 = lbl++); }
                         ex(p->opr.op[1], 1, lbl_kept);
-                        if (!scanning) { printf("\tjmp\tL%03d\n", lbl2); printf("L%03d:\n", lbl1); }
+                        if (!scanning) { fprintf(stdout, "\tjmp\tL%03d\n", lbl2 = lbl++); fprintf(stdout, "L%03d:\n", lbl1); }
                         ex(p->opr.op[2], 1, lbl_kept);
-                        if (!scanning) { printf("L%03d:\n", lbl2); }
+                        if (!scanning) { fprintf(stdout, "L%03d:\n", lbl2); }
                     } else {
-                        if (!scanning) { printf("\tj0\tL%03d\n", lbl1); }
+                        if (!scanning) { fprintf(stdout, "\tj0\tL%03d\n", lbl1 = lbl++); }
                         ex(p->opr.op[1], 1, lbl_kept);
-                        if (!scanning) { printf("L%03d:\n", lbl1); }
+                        if (!scanning) { fprintf(stdout, "L%03d:\n", lbl1); }
                     }
                     break;
                 case GETI:
-                    if (!scanning) { printf("\tgeti\n"); }
+                    if (!scanning) { fprintf(stdout, "\tgeti\n"); }
                     getRegister(reg, p->opr.op[0]->id.varName);
-                    if (!scanning) { printf("\tpop\t%s\n", reg); }
+                    if (!scanning) { fprintf(stdout, "\tpop\t%s\n", reg); }
                     break;
                 case GETC: 
-                    if (!scanning) { printf("\tgetc\n"); }
+                    if (!scanning) { fprintf(stdout, "\tgetc\n"); }
                     getRegister(reg, p->opr.op[0]->id.varName);
-                    if (!scanning) { printf("\tpop\t%s\n", reg); }
+                    if (!scanning) { fprintf(stdout, "\tpop\t%s\n", reg); }
                     break;
                 case GETS: 
-                    if (!scanning) { printf("\tgets\n"); }
+                    if (!scanning) { fprintf(stdout, "\tgets\n"); }
                     getRegister(reg, p->opr.op[0]->id.varName);
-                    if (!scanning) { printf("\tpop\t%s\n", reg); }
+                    if (!scanning) { fprintf(stdout, "\tpop\t%s\n", reg); }
                     break;
                 case PUTI: 
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!scanning) { printf("\tputi\n"); }
+                    if (!scanning) { fprintf(stdout, "\tputi\n"); }
                     break;
                 case PUTI_:
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!scanning) { printf("\tputi_\n"); }
+                    if (!scanning) { fprintf(stdout, "\tputi_\n"); }
                     break;
                 case PUTC: 
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!scanning) { printf("\tputc\n"); }
+                    if (!scanning) { fprintf(stdout, "\tputc\n"); }
                     break;
                 case PUTC_:
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!scanning) { printf("\tputc_\n"); }
+                    if (!scanning) { fprintf(stdout, "\tputc_\n"); }
                     break;
                 case PUTS: 
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!scanning) { printf("\tputs\n"); }
+                    if (!scanning) { fprintf(stdout, "\tputs\n"); }
                     break;
                 case PUTS_:
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!scanning) { printf("\tputs_\n"); }
+                    if (!scanning) { fprintf(stdout, "\tputs_\n"); }
                     break;
                 case '=':  
                     getRegister(reg, p->opr.op[0]->id.varName);
                     ex(p->opr.op[1], 1, lbl_kept);
                     if (p->opr.op[0]->type == typeId) {
-                        if (!scanning) printf("\tpop\t%s\n", reg);
+                        if (!scanning) fprintf(stdout, "\tpop\t%s\n", reg);
                     }
                     break;
                 case UMINUS:    
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!scanning) printf("\tneg\n");
+                    if (!scanning) fprintf(stdout, "\tneg\n");
                     break;
                 case CALL:
                     num_args = pushArgsOnStack(p->opr.op[1], lbl_kept);
                     getLabel(labelName, p->opr.op[0]->id.varName);
-                    if (!scanning) printf("\tcall\t%s, %d\n", labelName, num_args);
+                    if (!scanning) fprintf(stdout, "\tcall\t%s, %d\n", labelName, num_args);
                     break;
                 case RETURN:
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!scanning) printf("\tret\n");
+                    if (!scanning) fprintf(stdout, "\tret\n");
                     break;
                 default:
                     ex(p->opr.op[0], 1, lbl_kept);
                     ex(p->opr.op[1], 1, lbl_kept);
                     switch(p->opr.oper) {
-                        case '+': if (!scanning) printf("\tadd\n"); break;
-                        case '-': if (!scanning) printf("\tsub\n"); break; 
-                        case '*': if (!scanning) printf("\tmul\n"); break;
-                        case '/': if (!scanning) printf("\tdiv\n"); break;
-                        case '%': if (!scanning) printf("\tmod\n"); break;
-                        case '<': if (!scanning) printf("\tcompLT\n"); break;
-                        case '>': if (!scanning) printf("\tcompGT\n"); break;
-                        case GE:  if (!scanning) printf("\tcompGE\n"); break;
-                        case LE:  if (!scanning) printf("\tcompLE\n"); break;
-                        case NE:  if (!scanning) printf("\tcompNE\n"); break;
-                        case EQ:  if (!scanning) printf("\tcompEQ\n"); break;
-                        case AND: if (!scanning) printf("\tand\n"); break;
-                        case OR:  if (!scanning) printf("\tor\n"); break;
+                        case '+': if (!scanning) fprintf(stdout, "\tadd\n"); break;
+                        case '-': if (!scanning) fprintf(stdout, "\tsub\n"); break; 
+                        case '*': if (!scanning) fprintf(stdout, "\tmul\n"); break;
+                        case '/': if (!scanning) fprintf(stdout, "\tdiv\n"); break;
+                        case '%': if (!scanning) fprintf(stdout, "\tmod\n"); break;
+                        case '<': if (!scanning) fprintf(stdout, "\tcompLT\n"); break;
+                        case '>': if (!scanning) fprintf(stdout, "\tcompGT\n"); break;
+                        case GE:  if (!scanning) fprintf(stdout, "\tcompGE\n"); break;
+                        case LE:  if (!scanning) fprintf(stdout, "\tcompLE\n"); break;
+                        case NE:  if (!scanning) fprintf(stdout, "\tcompNE\n"); break;
+                        case EQ:  if (!scanning) fprintf(stdout, "\tcompEQ\n"); break;
+                        case AND: if (!scanning) fprintf(stdout, "\tand\n"); break;
+                        case OR:  if (!scanning) fprintf(stdout, "\tor\n"); break;
                     }
             }
             break;
@@ -194,7 +188,7 @@ int ex(nodeType *p, int nops, ...) {
             constructFuncFrame(&p->func);
             ex(p->func.stmt, 1, lbl_kept);
             destructFuncFrame(&p->func);
-            if (!scanning) printf("\tret\n");
+            if (!scanning) fprintf(stdout, "\tret\n");
             break;
     }
     return 0;
@@ -211,7 +205,7 @@ void execute() {
         pstmt = pstmt->next; 
     }
 
-    printf("\tend\n");
+    fprintf(stdout, "\tend\n");
 
     // functions
     nodeInListType *pfunc = funcs->head;
@@ -220,7 +214,7 @@ void execute() {
         nodeType *curr = pfunc->node;
 
         // label function & register function name
-        char label[LAB_NAME_LEN];
+        char label[LBL_NAME_LEN];
         int ret = getLabel(label, curr->func.name);
 
         // error checking
@@ -230,7 +224,7 @@ void execute() {
             exit(1);
         } else if (ret == 1) {
             // function has been declared
-            printf("%s:\n", label);
+            fprintf(stdout, "%s:\n", label);
         } else {
             // unknown functions
             fprintf(stderr, "Undeclared functions [errno: %d]\n", errno);
@@ -245,7 +239,7 @@ void execute() {
 // retrieve function label names
 int getLabel(char* label, char* name) {
     if (sm_exists(func_sym_tab, name)) {
-        sm_get(func_sym_tab, name, label, LAB_NAME_LEN);
+        sm_get(func_sym_tab, name, label, LBL_NAME_LEN);
         if (!sm_exists(global_sym_tab, name)) {
             // success
             return 1;
@@ -468,8 +462,6 @@ void start() {
     scan(stmts);
     scan(funcs);
 
-    lbl = 0;
-
     // make room for global variables
     int numOfGlobalVars = sm_get_count(global_sym_tab);
     if (numOfGlobalVars) {
@@ -494,8 +486,8 @@ void scan(nodeLinkedListType *list) {
 
 // move register pointer
 void mvSPRegPtr(int offset) {
-    printf("\tpush\t%s\n", "sp");
-    printf("\tpush\t%d\n", offset);
-    printf("\tadd\n");
-    printf("\tpop\t%s\n", "sp");
+    fprintf(stdout, "\tpush\t%s\n", "sp");
+    fprintf(stdout, "\tpush\t%d\n", offset);
+    fprintf(stdout, "\tadd\n");
+    fprintf(stdout, "\tpop\t%s\n", "sp");
 }

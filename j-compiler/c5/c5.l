@@ -7,7 +7,7 @@
 
 void yyerror(char *);
 
-char stringVarContent[1023]; // a string cannot exceed 1024 chars
+char stringVarContent[STR_MAX_LEN]; // a string cannot exceed 1024 chars
 %}
 
 %x STR
@@ -15,12 +15,12 @@ char stringVarContent[1023]; // a string cannot exceed 1024 chars
 %%
 
 0                    {
-                       yylval.intValue = (long) atoi(yytext); /* yylval.iValue = atoi(yytext); */
+                       yylval.intValue = (long) atoi(yytext);
                        return INTEGER;
                      }
 
 [1-9][0-9]*          {
-                       yylval.intValue = (long) atoi(yytext); /* yylval.iValue = atoi(yytext); */
+                       yylval.intValue = (long) atoi(yytext);
                        return INTEGER;
                      }
 
@@ -71,16 +71,16 @@ char stringVarContent[1023]; // a string cannot exceed 1024 chars
 "return"               return RETURN;
 
 ^[a-z]+[a-zA-Z0-9]*  { 
-                       // change to lowercase letters
-                       char* res = yytext; // + idx if needed
+                       /* case insensitive */
+                       char* res = yytext;
                        for ( ; *res; ++res) *res = tolower(*res);
 
-                       strcpy(yylval.sIndex, yytext); // + idx if needed
+                       strcpy(yylval.sIndex, yytext);
                        return LEFT_VARIABLE;
                      }
 
 $?[a-z]+[a-zA-Z0-9]* { 
-                       // change to lowercase letters
+                       /* case insensitive */
                        char* res = yytext;
                        for ( ; *res; ++res) *res = tolower(*res);
 

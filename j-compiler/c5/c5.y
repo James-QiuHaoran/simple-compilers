@@ -25,7 +25,7 @@ void end();
 
 /* execution functions */
 int ex(nodeType *p, int nops, ...);
-void execute();                 // statement and function list execution
+void execute();                 /* statement and function list execution */
 
 int yylex(void);
 void yyerror(char *s);
@@ -309,6 +309,8 @@ int main(int argc, char **argv) {
     // initialization for the compiler
     init();
 
+    // parsing
     yyparse();
+
     return 0;
 }

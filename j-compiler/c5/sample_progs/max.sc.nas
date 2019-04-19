@@ -18,12 +18,12 @@ L000:
 	push	fp[-5]
 	push	fp[-4]
 	compGE
-	j0	L003
+	j0	L001
 	push	fp[-5]
 	ret
-	jmp	L004
-L003:
+	jmp	L002
+L001:
 	push	fp[-4]
 	ret
-L004:
+L002:
 	ret

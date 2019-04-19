@@ -17,15 +17,15 @@
 	push	sb[0]
 	push	sb[1]
 	compEQ
-	j0	L002
+	j0	L001
 	push	"a==b"
 	puts
-L002:
-	jmp	L001
+L001:
+	jmp	L002
 L000:
 	push	"a<b"
 	puts
-L001:
+L002:
 	push	sb[2]
 	push	sb[0]
 	compLT

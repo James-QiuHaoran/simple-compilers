@@ -1,14 +1,13 @@
 #include "strmap.h"
 
-#define LAB_NAME_LEN 8
+#define LBL_NAME_LEN 8
 #define REG_NAME_LEN 128
+#define VAR_NAME_LEN 13
+#define STR_MAX_LEN 1024
 
 #define GLOBAL_TAB_SIZE 256
 #define LOCAL_TAB_SIZE 256
 #define FUNC_TAB_SIZE 256
-
-#define VAR_NAME_LEN 13
-#define STR_MAX_LEN 1024
 
 typedef enum { typeCon, typeId, typeOpr, typeFunc } nodeEnum;
 typedef enum { varTypeInt, varTypeChar, varTypeStr, varTypeNil } varTypeEnum;
@@ -17,7 +16,7 @@ typedef enum { typeFuncList, typeStmtList } listTypeEnum;
 /* constants */
 typedef struct conNodeType {
     int value;                  /* value of constant */
-    char strValue[STR_MAX_LEN]; /* string value, max 1023 chars*/
+    char strValue[STR_MAX_LEN]; /* string value, max 1024 chars*/
     varTypeEnum type;
 } conNodeType;
 

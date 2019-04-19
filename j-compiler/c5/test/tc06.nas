@@ -6,11 +6,11 @@
 	pop	sb[0]
 	push	1
 	pop	sb[1]
-L001:
+L000:
 	push	sb[1]
 	push	100
 	compLT
-	j0	L000
+	j0	L001
 	push	sb[1]
 	pop	sb[2]
 L002:
@@ -40,8 +40,8 @@ L003:
 	push	sb[0]
 	add
 	pop	sb[1]
-	jmp	L001
-L000:
+	jmp	L000
+L001:
 	push	sb[1]
 	puti_
 	push	", "
