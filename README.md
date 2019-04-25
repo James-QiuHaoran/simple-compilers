@@ -1,2 +1,8 @@
 # simple-compilers
-Several simple compilers implemented in C/C++, e.g. music notation compiler (simple music notation to abc notation), and a compiler for a toy programming language.
+
+Several simple compilers implemented in C/C++ and Haskell, e.g. music notation compiler (simple music notation to abc notation), and several compilers for toy programming languages with different features.
+
+- jcc
+- javascript-interpreter
+- music-translator
+- simple-calculator
