@@ -1,9 +1,9 @@
-printf "Sample Programs for the Compiler c5c\n\n"
+printf "Sample Programs for the Compiler c6c\n\n"
 
 for i in `ls sample_progs/*.sc`
 do
 	echo "========== $i =========="
-	./c5c $i > $i.nas
+	./c6c $i > $i.nas
 	printf "\n>>>> Source code:\n\n"
 	cat $i
 	echo ""

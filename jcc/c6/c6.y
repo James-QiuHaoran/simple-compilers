@@ -8,10 +8,8 @@
 
 /* prototypes */
 nodeType *opr(int oper, int nops, ...);
-nodeType *id(int i);                         // original - c4
-nodeType *nameToNode(char* name);            // new - c5
-nodeType *con(int value);                    // original - c4
-nodeType *var(long value, varTypeEnum type); // new - c5
+nodeType *nameToNode(char* name);
+nodeType *var(long value, varTypeEnum type);
 nodeType *func(char* name, nodeType *args, nodeType *stmt);
 
 /* node management */
@@ -156,24 +154,6 @@ expr:
 
 #define SIZEOF_NODETYPE ((char *)&p->con - (char *)p)
 
-// original con -> nodeType *var(long value, varTypeEnum type)
-nodeType *con(int value) {
-    nodeType *p;
-    size_t nodeSize;
-
-    /* allocate node */
-    nodeSize = SIZEOF_NODETYPE + sizeof(conNodeType);
-    if ((p = malloc(nodeSize)) == NULL)
-        yyerror("out of memory");
-
-    /* copy information */
-    p->type = typeCon;
-    p->con.value = value;
-
-    return p;
-}
-
-// original con -> nodeType *var(long value, varTypeEnum type)
 nodeType *var(long value, varTypeEnum type) {
     nodeType *p;
     size_t nodeSize;
@@ -215,7 +195,6 @@ nodeType *func(char* name, nodeType *args, nodeType *stmt) {
     return p;
 }
 
-// original id -> nodeType *nameToNode(char* name)
 nodeType *nameToNode(char* name) {
     nodeType *p;
     size_t nodeSize;

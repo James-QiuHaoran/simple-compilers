@@ -1,8 +1,8 @@
-# A simple programming language - c5's compiler
+# A simple programming language - c6's compiler
 
 ## Introduction
 
-c5c - compiler -> [`make c5c`]
+c6c - compiler -> [`make c6c`]
 nas - the assembler for a simulated stack machine [`make nas`]
 
 Or, you can run `make all` to make all executables.
@@ -29,7 +29,7 @@ There are three sample programs in the directory `sample_progs`:
 ## To run the compiler
 
 ```
-./c5c fact.sc >fact.nas
+./c6c fact.sc >fact.nas
 ./nas fact.nas
 ```
 
@@ -37,7 +37,7 @@ Run `make clean` to remove all intermediate or auxiliary files.
 
 ## Tests
 
-There are 15 tests in the `test` directory. To run them, simply execute `./run_tests.sh`. But make sure you've built the executables `c5c` and `nas`.
+There are 15 tests in the `test` directory. To run them, simply execute `./run_tests.sh`. But make sure you've built the executables `c6c` and `nas`.
 
 ## Contact
 

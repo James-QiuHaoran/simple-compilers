@@ -1,4 +1,4 @@
-printf "Test Cases for Compiler c5c\n\n"
+printf "Test Cases for Compiler c6c\n\n"
 
 counter=0
 pass=0
@@ -9,7 +9,7 @@ do
 	echo "+++++++++++++++++++++++++++++++++++"
 	echo "|          $i           |"
 	echo "+++++++++++++++++++++++++++++++++++"
-	./c5c $i > test/${i:5:4}.nas
+	./c6c $i > test/${i:5:4}.nas
 	printf "\n>>>> Source code:\n\n"
 	cat $i
 	echo ""
