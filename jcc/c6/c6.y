@@ -48,6 +48,7 @@ nodeLinkedListType* stmts;
 %token <strValue> STRING
 %token <sIndex> LEFT_VARIABLE RIGHT_VARIABLE
 %token FOR WHILE IF RETURN CALL GETI GETC GETS PUTI PUTC PUTS PUTI_ PUTC_ PUTS_
+%token CONTINUE BREAK
 %nonassoc IFX
 %nonassoc ELSE
 
@@ -110,6 +111,8 @@ stmt:
         | variable '=' expr ';'                            { $$ = opr('=', 2, $1, $3); }
         | FOR '(' stmt stmt stmt ')' stmt                  { $$ = opr(FOR, 4, $3, $4, $5, $7); }
         | WHILE '(' expr ')' stmt                          { $$ = opr(WHILE, 2, $3, $5); }
+        | CONTINUE ';'                                     { $$ = opr(CONTINUE, 2, NULL, NULL); }
+        | BREAK ';'                                        { $$ = opr(BREAK, 2, NULL, NULL); }
         | IF '(' expr ')' stmt %prec IFX                   { $$ = opr(IF, 2, $3, $5); }
         | IF '(' expr ')' stmt ELSE stmt                   { $$ = opr(IF, 3, $3, $5, $7); }
         | LEFT_VARIABLE '(' params ')' ';'                 { $$ = opr(CALL, 2, nameToNode($1), $3); }

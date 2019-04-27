@@ -30,7 +30,7 @@ void mvSPRegPtr(int offset);
 /* function definitions */
 // execution of AST on each node
 int ex(nodeType *p, int nops, ...) {
-    int lbl1, lbl2, lbl_init = lbl, lbl_kept;
+    int lbl1, lbl2, lbl3, lbl_init = lbl, lbl_kept;
 
     char reg[REG_NAME_LEN];
     char labelName[LBL_NAME_LEN];
@@ -75,11 +75,15 @@ int ex(nodeType *p, int nops, ...) {
         case typeOpr:
             switch(p->opr.oper) {
                 case FOR:
+                    lbl3 = lbl++;
+                    lbl2 = lbl++;
+                    lbl1 = lbl++;
                     ex(p->opr.op[0], 1, lbl_kept);
-                    if (!scanning) { fprintf(stdout, "L%03d:\n", lbl1 = lbl++); }
+                    if (!scanning) { fprintf(stdout, "L%03d:\n", lbl1); }
                     ex(p->opr.op[1], 1, lbl_kept);
-                    if (!scanning) { fprintf(stdout, "\tj0\tL%03d\n", lbl2 = lbl++); }
+                    if (!scanning) { fprintf(stdout, "\tj0\tL%03d\n", lbl2); }
                     ex(p->opr.op[3], 1, lbl_init);
+                    if (!scanning) { fprintf(stdout, "L%03d:\n", lbl3); }
                     ex(p->opr.op[2], 1, lbl_kept);
                     if (!scanning) { fprintf(stdout, "\tjmp\tL%03d\n", lbl1); fprintf(stdout, "L%03d:\n", lbl2); }
                     break;
@@ -103,6 +107,12 @@ int ex(nodeType *p, int nops, ...) {
                         ex(p->opr.op[1], 1, lbl_kept);
                         if (!scanning) { fprintf(stdout, "L%03d:\n", lbl1); }
                     }
+                    break;
+                case CONTINUE:
+                    if (!scanning) { fprintf(stdout, "\tjmp\tL%03d\n", lbl_kept); }
+                    break;
+                case BREAK:
+                    if (!scanning) { fprintf(stdout, "\tjmp\tL%03d\n", lbl_kept + 1); }
                     break;
                 case GETI:
                     if (!scanning) { fprintf(stdout, "\tgeti\n"); }

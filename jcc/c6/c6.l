@@ -55,6 +55,8 @@ char stringVarContent[STR_MAX_LEN]; // a string cannot exceed 1024 chars
 "!="                   return NE;
 "for"                  return FOR;
 "while"                return WHILE;
+"break"                return BREAK;
+"continue"             return CONTINUE;
 "if"                   return IF;
 "else"                 return ELSE;
 "geti"                 return GETI;
