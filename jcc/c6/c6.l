@@ -48,6 +48,9 @@ char stringVarContent[STR_MAX_LEN]; // a string cannot exceed 1024 chars
 [-()<>=+*/;{}.%,]    {
                        return *yytext;
                      }
+[\[\]]               {
+                       return *yytext;
+                     }
 
 ">="                   return GE;
 "<="                   return LE;
