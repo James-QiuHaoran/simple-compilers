@@ -1,16 +1,15 @@
 // for, while, break, continue 
 k = 1;
 for(i=1; i<100; i=i+k;) {
-  j=i;
+  j = i;
   while(j > 0) {
     j = j / 2;
     if(j == 1)
-      //break;
-      j = -1;
+      break;
   }
-//  if(i<10) {
-//    continue;
-//  }
+  if(i<10) {
+    continue;
+  }
   k=k+1;
 }
 
