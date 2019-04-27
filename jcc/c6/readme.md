@@ -9,7 +9,7 @@ Or, you can run `make all` to make all executables.
 
 ## Features
 
-This is a compiler for a simple programming lanaguage. The features implemeted are:
+This is a compiler for a simple programming lanaguage. c6 is based on c5, which has the following features:
 
 - Constants and variables (global & local)
 - Arithmetic compuations (`+`, `-`, `*`, `/`)
@@ -17,6 +17,11 @@ This is a compiler for a simple programming lanaguage. The features implemeted a
 - Control flow (`for`, `while`, `if`)
 - Functions (could be recursive)
 - I/O
+
+In addition, these features have been added to c6:
+
+- Control flow: `break` and `continue`
+- Arrays
 
 ## Example programs
 
