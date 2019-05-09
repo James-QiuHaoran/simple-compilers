@@ -1,0 +1,2 @@
+This is the first sentence. This is the second sentence! Is this the third sentence? Yes, it is. In this "fifth" sentence, there's a floating number - 12.34, waiting to be tested.
+
