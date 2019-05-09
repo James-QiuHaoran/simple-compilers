@@ -1,0 +1,39 @@
+plot
+display
+
+move(-1,0)
+set_pen @
+plot
+display
+
+reset_pen
+plot
+display
+
+reset_bed
+display
+
+move_to(11,0)
+move_to(0,0)
+plot
+display
+
+reset_bed
+display
+
+plot_line (1,1) (1,5)
+display
+
+set_pen *
+plot_line (5,5) (8,5)
+display
+
+set_pen $
+plot_line (2,1) (7,1)
+display
+
+set_pen x
+plot_rect (8,8) (10,10)
+display
+
+exit
