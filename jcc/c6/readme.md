@@ -20,8 +20,9 @@ This is a compiler for a simple programming lanaguage. c6 is based on c5, which 
 
 In addition, these features have been added to c6:
 
-- Control flow: `break` and `continue`
-- Arrays
+- Control flow: `break` and `continue`;
+- String functioning as other normal variables (assignment, comparison, print);
+- Multi-dimensional arrays;
 
 ## Example programs
 
