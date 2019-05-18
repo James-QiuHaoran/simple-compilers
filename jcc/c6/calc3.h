@@ -9,6 +9,8 @@
 #define LOCAL_TAB_SIZE 256
 #define FUNC_TAB_SIZE 256
 
+#define STR_HASH_LEN 4
+
 typedef enum { typeCon, typeId, typeOpr, typeFunc } nodeEnum;
 typedef enum { varTypeInt, varTypeChar, varTypeStr, varTypeNil } varTypeEnum;
 typedef enum { typeFuncList, typeStmtList } listTypeEnum;
@@ -17,6 +19,7 @@ typedef enum { typeFuncList, typeStmtList } listTypeEnum;
 typedef struct conNodeType {
     int value;                  /* value of constant */
     char strValue[STR_MAX_LEN]; /* string value, max 1024 chars*/
+    int strValueHash;           /* hash value for the string content */
     varTypeEnum type;
 } conNodeType;
 
@@ -24,6 +27,7 @@ typedef struct conNodeType {
 typedef struct idNodeType {
     char varName[VAR_NAME_LEN]; /* subscript to sym array */
     varTypeEnum type;
+    int strValueHash;           /* only for string variables */
 } idNodeType;
 
 /* operators */
@@ -82,6 +86,10 @@ typedef struct StackSym {
 extern StrMap* global_sym_tab;
 extern StrMap* func_sym_tab;
 extern StackSym* local_sym_tab;
+
+/* strings */
+extern StrMap* string_tab;
+extern StrMap* string_var_tab;
 
 /* stack list (functions and statements) */
 extern nodeLinkedListType* funcs;

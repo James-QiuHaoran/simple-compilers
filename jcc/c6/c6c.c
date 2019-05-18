@@ -21,6 +21,7 @@ void scan(nodeLinkedListType *list);
 
 /* helper functions */
 int getLabel(char* label, char* name);
+int getHash(char* name);
 int getRegister(char* reg, char* name);
 int pushArgsOnStack(nodeType* args, int lbl_kept);
 void constructFuncFrame(funcNodeType* func);
@@ -29,7 +30,7 @@ void mvSPRegPtr(int offset);
 
 /* function definitions */
 // execution of AST on each node
-int ex(nodeType *p, int nops, ...) {
+int ex(nodeType *p, int exType, int nops, ...) {
     int lbl1, lbl2, lbl3, lbl_init = lbl, lbl_kept;
 
     char reg[REG_NAME_LEN];
@@ -59,7 +60,13 @@ int ex(nodeType *p, int nops, ...) {
                     break;
                 case varTypeStr:
                     // string
-                    if (!scanning) fprintf(stdout, "\tpush\t\"%s\"\n", p->con.strValue); 
+                    if (exType == 0) {
+                        // for string comparison
+                        if (!scanning) fprintf(stdout, "\tpush\t\"%d\"\n", p->con.strValueHash);    
+                    } else {
+                        if (!scanning) fprintf(stdout, "\tpush\t\"%s\"\n", p->con.strValue); 
+                    }
+                    return p->con.strValueHash;
                     break;
                 case varTypeNil:
                     // nothing to be done
@@ -67,9 +74,16 @@ int ex(nodeType *p, int nops, ...) {
             }
             break;
         // identifiers
-        case typeId:      
-            getRegister(reg, p->id.varName);
-            if (!scanning) fprintf(stdout, "\tpush\t%s\n", reg); 
+        case typeId:
+            if (exType == 0) {
+                // string comparison
+                // printf("test\n");
+                int hashVal = getHash(p->id.varName);
+                if (!scanning) fprintf(stdout, "\tpush\t%d\n", hashVal);
+            } else {
+                getRegister(reg, p->id.varName);
+                if (!scanning) fprintf(stdout, "\tpush\t%s\n", reg); 
+            }
             break;
         // operators
         case typeOpr:
@@ -78,33 +92,33 @@ int ex(nodeType *p, int nops, ...) {
                     lbl3 = lbl++;
                     lbl2 = lbl++;
                     lbl1 = lbl++;
-                    ex(p->opr.op[0], 1, lbl_kept);
+                    ex(p->opr.op[0], -1, 1, lbl_kept);
                     if (!scanning) { fprintf(stdout, "L%03d:\n", lbl1); }
-                    ex(p->opr.op[1], 1, lbl_kept);
+                    ex(p->opr.op[1], -1, 1, lbl_kept);
                     if (!scanning) { fprintf(stdout, "\tj0\tL%03d\n", lbl2); }
-                    ex(p->opr.op[3], 1, lbl_init);
+                    ex(p->opr.op[3], -1, 1, lbl_init);
                     if (!scanning) { fprintf(stdout, "L%03d:\n", lbl3); }
-                    ex(p->opr.op[2], 1, lbl_kept);
+                    ex(p->opr.op[2], -1, 1, lbl_kept);
                     if (!scanning) { fprintf(stdout, "\tjmp\tL%03d\n", lbl1); fprintf(stdout, "L%03d:\n", lbl2); }
                     break;
                 case WHILE:
                     if (!scanning) { fprintf(stdout, "L%03d:\n", lbl1 = lbl++); }
-                    ex(p->opr.op[0], 1, lbl_kept);
+                    ex(p->opr.op[0], -1, 1, lbl_kept);
                     if (!scanning) { fprintf(stdout, "\tj0\tL%03d\n", lbl2 = lbl++); }
-                    ex(p->opr.op[1], 1, lbl_init);
+                    ex(p->opr.op[1], -1, 1, lbl_init);
                     if (!scanning) { fprintf(stdout, "\tjmp\tL%03d\n", lbl1); fprintf(stdout, "L%03d:\n", lbl2); }
                     break;
                 case IF:
-                    ex(p->opr.op[0], 1, lbl_kept);
+                    ex(p->opr.op[0], -1, 1, lbl_kept);
                     if (p->opr.nops > 2) {
                         if (!scanning) { fprintf(stdout, "\tj0\tL%03d\n", lbl1 = lbl++); }
-                        ex(p->opr.op[1], 1, lbl_kept);
+                        ex(p->opr.op[1], -1, 1, lbl_kept);
                         if (!scanning) { fprintf(stdout, "\tjmp\tL%03d\n", lbl2 = lbl++); fprintf(stdout, "L%03d:\n", lbl1); }
-                        ex(p->opr.op[2], 1, lbl_kept);
+                        ex(p->opr.op[2], -1, 1, lbl_kept);
                         if (!scanning) { fprintf(stdout, "L%03d:\n", lbl2); }
                     } else {
                         if (!scanning) { fprintf(stdout, "\tj0\tL%03d\n", lbl1 = lbl++); }
-                        ex(p->opr.op[1], 1, lbl_kept);
+                        ex(p->opr.op[1], -1, 1, lbl_kept);
                         if (!scanning) { fprintf(stdout, "L%03d:\n", lbl1); }
                     }
                     break;
@@ -130,38 +144,42 @@ int ex(nodeType *p, int nops, ...) {
                     if (!scanning) { fprintf(stdout, "\tpop\t%s\n", reg); }
                     break;
                 case PUTI: 
-                    ex(p->opr.op[0], 1, lbl_kept);
+                    ex(p->opr.op[0], -1, 1, lbl_kept);
                     if (!scanning) { fprintf(stdout, "\tputi\n"); }
                     break;
                 case PUTI_:
-                    ex(p->opr.op[0], 1, lbl_kept);
+                    ex(p->opr.op[0], -1, 1, lbl_kept);
                     if (!scanning) { fprintf(stdout, "\tputi_\n"); }
                     break;
                 case PUTC: 
-                    ex(p->opr.op[0], 1, lbl_kept);
+                    ex(p->opr.op[0], -1, 1, lbl_kept);
                     if (!scanning) { fprintf(stdout, "\tputc\n"); }
                     break;
                 case PUTC_:
-                    ex(p->opr.op[0], 1, lbl_kept);
+                    ex(p->opr.op[0], -1, 1, lbl_kept);
                     if (!scanning) { fprintf(stdout, "\tputc_\n"); }
                     break;
                 case PUTS: 
-                    ex(p->opr.op[0], 1, lbl_kept);
+                    ex(p->opr.op[0], -1, 1, lbl_kept);
                     if (!scanning) { fprintf(stdout, "\tputs\n"); }
                     break;
                 case PUTS_:
-                    ex(p->opr.op[0], 1, lbl_kept);
+                    ex(p->opr.op[0], -1, 1, lbl_kept);
                     if (!scanning) { fprintf(stdout, "\tputs_\n"); }
                     break;
                 case '=':  
                     getRegister(reg, p->opr.op[0]->id.varName);
-                    ex(p->opr.op[1], 1, lbl_kept);
+                    int ret = ex(p->opr.op[1], -1, 1, lbl_kept);
+                    
+                    if (p->opr.op[1]->type == typeCon && p->opr.op[1]->con.type == varTypeStr) {
+                        p->opr.op[0]->id.strValueHash = ret;
+                    }
                     if (p->opr.op[0]->type == typeId) {
                         if (!scanning) fprintf(stdout, "\tpop\t%s\n", reg);
                     }
                     break;
                 case UMINUS:    
-                    ex(p->opr.op[0], 1, lbl_kept);
+                    ex(p->opr.op[0], -1, 1, lbl_kept);
                     if (!scanning) fprintf(stdout, "\tneg\n");
                     break;
                 case CALL:
@@ -170,12 +188,29 @@ int ex(nodeType *p, int nops, ...) {
                     if (!scanning) fprintf(stdout, "\tcall\t%s, %d\n", labelName, num_args);
                     break;
                 case RETURN:
-                    ex(p->opr.op[0], 1, lbl_kept);
+                    ex(p->opr.op[0], -1, 1, lbl_kept);
                     if (!scanning) fprintf(stdout, "\tret\n");
                     break;
+                case EQ:
+                    //fprintf(stdout, "op0 type: %d, op1 type: %d\n", p->opr.op[0]->type, p->opr.op[1]->type);
+                    //fprintf(stdout, "op0 strValueHash: %d, op1 strValueHash: %d\n", p->opr.op[0]->id.strValueHash, p->opr.op[1]->id.strValueHash);
+                    if (p->opr.op[1]->type == typeCon && p->opr.op[1]->con.type == varTypeStr ||
+                        p->opr.op[0]->type == typeCon && p->opr.op[0]->con.type == varTypeStr ||
+                        sm_exists(string_var_tab, p->opr.op[1]->id.varName) ||
+                        sm_exists(string_var_tab, p->opr.op[0]->id.varName)) {
+                        // for string comparison
+                        ex(p->opr.op[0], 0, 1, lbl_kept);
+                        ex(p->opr.op[1], 0, 1, lbl_kept);
+                    } else {
+                        // int/char comparison
+                        ex(p->opr.op[0], -1, 1, lbl_kept);
+                        ex(p->opr.op[1], -1, 1, lbl_kept);
+                    }
+                    if (!scanning) fprintf(stdout, "\tcompEQ\n");
+                    break;
                 default:
-                    ex(p->opr.op[0], 1, lbl_kept);
-                    ex(p->opr.op[1], 1, lbl_kept);
+                    ex(p->opr.op[0], -1, 1, lbl_kept);
+                    ex(p->opr.op[1], -1, 1, lbl_kept);
                     switch(p->opr.oper) {
                         case '+': if (!scanning) fprintf(stdout, "\tadd\n"); break;
                         case '-': if (!scanning) fprintf(stdout, "\tsub\n"); break; 
@@ -187,7 +222,6 @@ int ex(nodeType *p, int nops, ...) {
                         case GE:  if (!scanning) fprintf(stdout, "\tcompGE\n"); break;
                         case LE:  if (!scanning) fprintf(stdout, "\tcompLE\n"); break;
                         case NE:  if (!scanning) fprintf(stdout, "\tcompNE\n"); break;
-                        case EQ:  if (!scanning) fprintf(stdout, "\tcompEQ\n"); break;
                         case AND: if (!scanning) fprintf(stdout, "\tand\n"); break;
                         case OR:  if (!scanning) fprintf(stdout, "\tor\n"); break;
                     }
@@ -196,7 +230,7 @@ int ex(nodeType *p, int nops, ...) {
         // functions
         case typeFunc:
             constructFuncFrame(&p->func);
-            ex(p->func.stmt, 1, lbl_kept);
+            ex(p->func.stmt, -1, 1, lbl_kept);
             destructFuncFrame(&p->func);
             if (!scanning) fprintf(stdout, "\tret\n");
             break;
@@ -211,7 +245,7 @@ void execute() {
 
     while(pstmt) {
         nodeType *curr = pstmt->node;
-        ex(curr, 0);
+        ex(curr, -1, 0);
         pstmt = pstmt->next; 
     }
 
@@ -241,7 +275,7 @@ void execute() {
             exit(1);
         }
 
-        ex(curr, 0);
+        ex(curr, -1, 0);
         pfunc = pfunc->next; 
     }
 }
@@ -261,6 +295,23 @@ int getLabel(char* label, char* name) {
         sprintf(label, "L%03d", lbl++);
         sm_put(func_sym_tab, name, label);
         return 0;
+    }
+}
+
+// retrieve string hash value
+int getHash(char* name) {
+    if (sm_exists(string_var_tab, name)) {
+        char stringContent[STR_MAX_LEN];
+        sm_get(string_var_tab, name, stringContent, STR_MAX_LEN);
+        if (sm_exists(string_tab, stringContent)) {
+            char stringHash[STR_HASH_LEN];
+            sm_get(string_tab, stringContent, stringHash, STR_HASH_LEN);            
+            return atoi(stringHash);
+        } else {
+            return -1;
+        }
+    } else {
+        return -1;
     }
 }
 
@@ -310,12 +361,12 @@ int pushArgsOnStack(nodeType* args, int lbl_kept) {
         return 0;
 
     if (args->type != typeOpr || args->opr.oper != ',') {
-        ex(args, 1, lbl_kept);       
+        ex(args, -1, 1, lbl_kept);       
         return 1;
     }
 
     int num_args = pushArgsOnStack(args->opr.op[0], lbl_kept);
-    ex(args->opr.op[1], 1, lbl_kept);
+    ex(args->opr.op[1], -1, 1, lbl_kept);
 
     num_args += 1;
 
@@ -414,6 +465,10 @@ void init() {
     global_sym_tab = sm_new(GLOBAL_TAB_SIZE);
     func_sym_tab = sm_new(FUNC_TAB_SIZE);
 
+    // init string table
+    string_tab = sm_new(GLOBAL_TAB_SIZE);
+    string_var_tab = sm_new(GLOBAL_TAB_SIZE);
+
     local_sym_tab = (StackSym*) malloc(sizeof(StackSym));
     local_sym_tab->lower = NULL;
     local_sym_tab->symbol_table = NULL;
@@ -435,6 +490,10 @@ void end() {
     // delete symbol tables
     sm_delete(global_sym_tab);
     sm_delete(func_sym_tab);
+
+    // delete string table
+    sm_delete(string_tab);
+    sm_delete(string_var_tab);
 
     // free the local symbol table
     free(local_sym_tab);
@@ -487,7 +546,7 @@ void scan(nodeLinkedListType *list) {
 
     while(p) {
         nodeType *n = p->node;
-        ex(n, 0);
+        ex(n, -1, 0);
         p = p->next; 
     }
 

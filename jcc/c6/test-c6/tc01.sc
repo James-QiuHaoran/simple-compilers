@@ -12,5 +12,12 @@ if (s1 == s2) {
   puts("s1 is not equal to s2!");
 }
 
+s2 = "cba";
+if (s1 == s2) {
+  puts("now s1 equals s2!");
+} else {
+  puts("now s1 is not equal to s2!");
+}
+
 // string printing functions well
 puts("String printing functions well!");

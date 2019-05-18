@@ -1,4 +1,5 @@
 %{
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -8,6 +9,7 @@
 
 /* prototypes */
 nodeType *opr(int oper, int nops, ...);
+nodeType *sopr(int oper, int nops, ...);
 nodeType *nameToNode(char* name);
 nodeType *var(long value, varTypeEnum type);
 nodeType *func(char* name, nodeType *args, nodeType *stmt);
@@ -22,7 +24,7 @@ void start();
 void end();
 
 /* execution functions */
-int ex(nodeType *p, int nops, ...);
+int ex(nodeType *p, int exType, int nops, ...);
 void execute();                 /* statement and function list execution */
 
 int yylex(void);
@@ -32,9 +34,12 @@ void yyerror(char *s);
 StrMap* global_sym_tab;         /* global variable symbol table */
 StackSym* local_sym_tab;        /* local varaible symbol table */
 StrMap* func_sym_tab;           /* global function symbol table */
+StrMap* string_tab;             /* string table */
+StrMap* string_var_tab;         /* string variable table */
 
 nodeLinkedListType* funcs;   
 nodeLinkedListType* stmts;
+
 %}
 
 %union {
@@ -108,6 +113,7 @@ stmt:
         | PUTC_ '(' arg ')' ';'                            { $$ = opr(PUTC_, 1, $3); }
         | PUTS '(' arg ')' ';'                             { $$ = opr(PUTS, 1, $3); }
         | PUTS_ '(' arg ')' ';'                            { $$ = opr(PUTS_, 1, $3); }
+        | variable '=' STRING ';'                          { $$ = sopr('=', 2, $1, var((long) $3, varTypeStr)); }
         | variable '=' expr ';'                            { $$ = opr('=', 2, $1, $3); }
         | FOR '(' stmt stmt stmt ')' stmt                  { $$ = opr(FOR, 4, $3, $4, $5, $7); }
         | WHILE '(' expr ')' stmt                          { $$ = opr(WHILE, 2, $3, $5); }
@@ -117,11 +123,13 @@ stmt:
         | IF '(' expr ')' stmt ELSE stmt                   { $$ = opr(IF, 3, $3, $5, $7); }
         | LEFT_VARIABLE '(' params ')' ';'                 { $$ = opr(CALL, 2, nameToNode($1), $3); }
         | RETURN expr ';'                                  { $$ = opr(RETURN, 1, $2); }
+        | RETURN STRING ';'                                { $$ = opr(RETURN, 1, var((long) $2, varTypeStr)); }
         | '{' stmt_list '}'                                { $$ = $2; }
         ;
 
 arg:
           expr                                             { $$ = $1; }
+        | STRING                                           { $$ = var((long) $1, varTypeStr); }
         | /* NULL */                                       { $$ = NULL; }
         ;
 
@@ -133,7 +141,6 @@ args:
 expr:
           INTEGER                                          { $$ = var($1, varTypeInt); }
         | CHAR                                             { $$ = var($1, varTypeChar); }
-        | STRING                                           { $$ = var((long) $1, varTypeStr); }
         | variable                                         { $$ = $1; }
         | '-' expr %prec UMINUS                            { $$ = opr(UMINUS, 1, $2); }
         | expr '+' expr                                    { $$ = opr('+', 2, $1, $3); }
@@ -170,7 +177,19 @@ nodeType *var(long value, varTypeEnum type) {
     p->type = typeCon;
     p->con.type = type;
     if (type == varTypeStr) { 
-        strcpy(p->con.strValue, (char*) value); 
+        strcpy(p->con.strValue, (char*) value);
+
+        // check for string content -> build <str_content, str_hash> mappings
+        char strValueHash[STR_HASH_LEN];
+        if (sm_exists(string_tab, (char*) value)) {
+            sm_get(string_tab, (char*) value, strValueHash, STR_HASH_LEN);
+        } else {
+            // itoa(sm_get_count(string_tab), strValueHash, 10);
+            snprintf(strValueHash, STR_HASH_LEN, "%d", sm_get_count(string_tab));
+            sm_put(string_tab, (char*) value, strValueHash);
+        }
+        p->con.strValueHash = atoi(strValueHash);
+
     } else {
         p->con.value = (int) value;
     }
@@ -211,6 +230,7 @@ nodeType *nameToNode(char* name) {
     p->type = typeId;
     strcpy(p->id.varName, name);
     p->id.type = varTypeNil;
+    p->id.strValueHash = -1;
 
     return p;
 }
@@ -222,8 +242,7 @@ nodeType *opr(int oper, int nops, ...) {
     int i;
 
     /* allocate node */
-    nodeSize = SIZEOF_NODETYPE + sizeof(oprNodeType) +
-        (nops - 1) * sizeof(nodeType*);
+    nodeSize = SIZEOF_NODETYPE + sizeof(oprNodeType) + (nops - 1) * sizeof(nodeType*);
     if ((p = malloc(nodeSize)) == NULL)
         yyerror("out of memory");
 
@@ -232,9 +251,39 @@ nodeType *opr(int oper, int nops, ...) {
     p->opr.oper = oper;
     p->opr.nops = nops;
     va_start(ap, nops);
-    for (i = 0; i < nops; i++)
+    for (i = 0; i < nops; i++) {
         p->opr.op[i] = va_arg(ap, nodeType*);
+    }
     va_end(ap);
+
+    return p;
+}
+
+// specifically for strings
+nodeType *sopr(int oper, int nops, ...) {
+    va_list ap;
+    nodeType *p;
+    size_t nodeSize;
+    int i;
+
+    /* allocate node */
+    nodeSize = SIZEOF_NODETYPE + sizeof(oprNodeType) + (nops - 1) * sizeof(nodeType*);
+    if ((p = malloc(nodeSize)) == NULL)
+        yyerror("out of memory");
+
+    /* copy information */
+    p->type = typeOpr;
+    p->opr.oper = oper;
+    p->opr.nops = nops;
+    va_start(ap, nops);
+    for (i = 0; i < nops; i++) {
+        p->opr.op[i] = va_arg(ap, nodeType*);
+    }
+    va_end(ap);
+
+    // build <str_name, str_content> mappings
+    sm_put(string_var_tab, p->opr.op[0]->id.varName, p->opr.op[1]->con.strValue);
+
     return p;
 }
 
