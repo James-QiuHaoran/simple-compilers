@@ -154,6 +154,7 @@ expr:
         | expr LE expr                                     { $$ = opr(LE, 2, $1, $3); }
         | expr NE expr                                     { $$ = opr(NE, 2, $1, $3); }
         | expr EQ expr                                     { $$ = opr(EQ, 2, $1, $3); }
+        | expr EQ STRING                                   { $$ = opr(EQ, 2, $1, var((long) $3, varTypeStr)); }
         | expr AND expr                                    { $$ = opr(AND, 2, $1, $3); }
         | expr OR expr                                     { $$ = opr(OR, 2, $1, $3); }
         | '(' expr ')'                                     { $$ = $2; }
@@ -230,7 +231,6 @@ nodeType *nameToNode(char* name) {
     p->type = typeId;
     strcpy(p->id.varName, name);
     p->id.type = varTypeNil;
-    p->id.strValueHash = -1;
 
     return p;
 }

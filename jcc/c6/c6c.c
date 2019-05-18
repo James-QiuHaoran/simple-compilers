@@ -62,11 +62,10 @@ int ex(nodeType *p, int exType, int nops, ...) {
                     // string
                     if (exType == 0) {
                         // for string comparison
-                        if (!scanning) fprintf(stdout, "\tpush\t\"%d\"\n", p->con.strValueHash);    
+                        if (!scanning) fprintf(stdout, "\tpush\t%d\n", p->con.strValueHash);    
                     } else {
                         if (!scanning) fprintf(stdout, "\tpush\t\"%s\"\n", p->con.strValue); 
                     }
-                    return p->con.strValueHash;
                     break;
                 case varTypeNil:
                     // nothing to be done
@@ -77,10 +76,10 @@ int ex(nodeType *p, int exType, int nops, ...) {
         case typeId:
             if (exType == 0) {
                 // string comparison
-                // printf("test\n");
                 int hashVal = getHash(p->id.varName);
                 if (!scanning) fprintf(stdout, "\tpush\t%d\n", hashVal);
             } else {
+                // normal case
                 getRegister(reg, p->id.varName);
                 if (!scanning) fprintf(stdout, "\tpush\t%s\n", reg); 
             }
@@ -169,11 +168,7 @@ int ex(nodeType *p, int exType, int nops, ...) {
                     break;
                 case '=':  
                     getRegister(reg, p->opr.op[0]->id.varName);
-                    int ret = ex(p->opr.op[1], -1, 1, lbl_kept);
-                    
-                    if (p->opr.op[1]->type == typeCon && p->opr.op[1]->con.type == varTypeStr) {
-                        p->opr.op[0]->id.strValueHash = ret;
-                    }
+                    ex(p->opr.op[1], -1, 1, lbl_kept);
                     if (p->opr.op[0]->type == typeId) {
                         if (!scanning) fprintf(stdout, "\tpop\t%s\n", reg);
                     }
@@ -192,8 +187,6 @@ int ex(nodeType *p, int exType, int nops, ...) {
                     if (!scanning) fprintf(stdout, "\tret\n");
                     break;
                 case EQ:
-                    //fprintf(stdout, "op0 type: %d, op1 type: %d\n", p->opr.op[0]->type, p->opr.op[1]->type);
-                    //fprintf(stdout, "op0 strValueHash: %d, op1 strValueHash: %d\n", p->opr.op[0]->id.strValueHash, p->opr.op[1]->id.strValueHash);
                     if (p->opr.op[1]->type == typeCon && p->opr.op[1]->con.type == varTypeStr ||
                         p->opr.op[0]->type == typeCon && p->opr.op[0]->con.type == varTypeStr ||
                         sm_exists(string_var_tab, p->opr.op[1]->id.varName) ||
@@ -202,7 +195,7 @@ int ex(nodeType *p, int exType, int nops, ...) {
                         ex(p->opr.op[0], 0, 1, lbl_kept);
                         ex(p->opr.op[1], 0, 1, lbl_kept);
                     } else {
-                        // int/char comparison
+                        // for int/char comparison
                         ex(p->opr.op[0], -1, 1, lbl_kept);
                         ex(p->opr.op[1], -1, 1, lbl_kept);
                     }

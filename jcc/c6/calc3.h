@@ -27,7 +27,6 @@ typedef struct conNodeType {
 typedef struct idNodeType {
     char varName[VAR_NAME_LEN]; /* subscript to sym array */
     varTypeEnum type;
-    int strValueHash;           /* only for string variables */
 } idNodeType;
 
 /* operators */
