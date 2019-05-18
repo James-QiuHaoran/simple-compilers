@@ -47,5 +47,37 @@ do
 	counter=$((counter+1))
 done
 
+for i in `ls test-c6/*.sc`
+do
+	echo "+++++++++++++++++++++++++++++++++++"
+	echo "|          $i           |"
+	echo "+++++++++++++++++++++++++++++++++++"
+	./c6c $i > test-c6/${i:8:4}.nas
+	printf "\n>>>> Source code:\n\n"
+	cat $i
+	echo ""
+	printf ">>>> Result:\n\n"
+
+    ./nas test-c6/${i:8:4}.nas > output
+
+	cat output
+	printf "\n>>>> Sample answer:\n\n"
+	cat test-c6/${i:8:4}.ans
+	
+	if diff output test-c6/${i:8:4}.ans >/dev/null
+	then
+		pass=$((pass+1))
+		printf "\nTest passed!\n\n"
+	else
+		fail=$((fail+1))
+		printf "\nTest failed!\n\n"
+	fi
+
+	rm -rf output
+	echo ""
+
+	counter=$((counter+1))
+done
+
 echo "----------"
 echo "All $counter tests: $pass passed, $fail failed"

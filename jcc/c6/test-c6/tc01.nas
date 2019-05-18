@@ -36,6 +36,28 @@ L002:
 	push	"now s1 is not equal to s2!"
 	puts
 L003:
+	push	2
+	push	5
+	compEQ
+	j0	L004
+	push	"s1 = cba"
+	puts
+	jmp	L005
+L004:
+	push	"s1 != cba"
+	puts
+L005:
+	push	2
+	push	2
+	compEQ
+	j0	L006
+	push	"s1 = abc"
+	puts
+	jmp	L007
+L006:
+	push	"s1 != abc"
+	puts
+L007:
 	push	"String printing functions well!"
 	puts
 	end
