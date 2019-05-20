@@ -11,7 +11,7 @@
 
 #define STR_HASH_LEN 4
 
-typedef enum { typeCon, typeId, typeOpr, typeFunc } nodeEnum;
+typedef enum { typeCon, typeId, typeArr, typeOpr, typeFunc } nodeEnum;
 typedef enum { varTypeInt, varTypeChar, varTypeStr, varTypeNil } varTypeEnum;
 typedef enum { typeFuncList, typeStmtList } listTypeEnum;
 
@@ -35,6 +35,20 @@ typedef struct oprNodeType {
     int nops;                   /* number of operands */
     struct nodeType *op[1];     /* operands */
 } oprNodeType;
+
+/* arrays */
+typedef struct arrNodeType {
+    struct arrOffsetListNodeType *offsetListHead;
+    struct arrOffsetListNodeType *offsetListTail;
+    char name[VAR_NAME_LEN];
+    int dimension;
+    int size;
+} arrNodeType;
+
+typedef struct arrOffsetListNodeType {
+    struct nodeType *offset;
+    struct arrOffsetListNodeType *next;
+} arrOffsetListNodeType;
 
 /* functions */
 typedef struct funcNodeType {
@@ -68,6 +82,7 @@ typedef struct nodeType {
     union {
         conNodeType con;        /* constants */
         idNodeType id;          /* identifiers */
+        arrNodeType arr;        /* arrays */
         oprNodeType opr;        /* operators */
         funcNodeType func;      /* functions*/
     };

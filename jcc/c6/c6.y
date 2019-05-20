@@ -12,6 +12,8 @@ nodeType *opr(int oper, int nops, ...);
 nodeType *sopr(int oper, int nops, ...);
 nodeType *nameToNode(char* name);
 nodeType *var(long value, varTypeEnum type);
+nodeType *arr(nodeType* id, nodeType *offset);
+nodeType *multiDimensionalizeArray(nodeType *p, nodeType *offset);
 nodeType *func(char* name, nodeType *args, nodeType *stmt);
 
 /* node management */
@@ -54,6 +56,7 @@ nodeLinkedListType* stmts;
 %token <sIndex> LEFT_VARIABLE RIGHT_VARIABLE
 %token FOR WHILE IF RETURN CALL GETI GETC GETS PUTI PUTC PUTS PUTI_ PUTC_ PUTS_
 %token CONTINUE BREAK
+%token ARRAY_DECL
 %nonassoc IFX
 %nonassoc ELSE
 
@@ -61,9 +64,9 @@ nodeLinkedListType* stmts;
 %left GE LE EQ NE '>' '<'
 %left '+' '-'
 %left '*' '/' '%'
-%nonassoc UMINUS
+%nonassoc UMINUS REF DEREF
 
-%type <nPtr> stmt expr stmt_list func params param variable args arg
+%type <nPtr> stmt expr stmt_list func params param variable args arg array assignment assignment_list arr_decl_list left_var arr_list
 
 %%
 
@@ -96,6 +99,12 @@ variable:
         | RIGHT_VARIABLE                                   { $$ = nameToNode($1); }
         ;
 
+left_var:
+          variable                                         { $$ = $1; }
+        | array                                            { $$ = $1; }
+        | '*' expr %prec DEREF                             { $$ = opr(DEREF, 1, $2); }
+        ;
+
 stmt_list:
           stmt                                             { $$ = $1; }
         | stmt_list stmt                                   { $$ = opr(';', 2, $1, $2); }
@@ -104,17 +113,16 @@ stmt_list:
 stmt:
           ';'                                              { $$ = opr(';', 2, NULL, NULL); }
         | expr ';'                                         { $$ = $1; }
-        | GETI '(' variable ')' ';'                        { $$ = opr(GETI, 1, $3); }
-        | GETC '(' variable ')' ';'                        { $$ = opr(GETC, 1, $3); }
-        | GETS '(' variable ')' ';'                        { $$ = opr(GETS, 1, $3); }
+        | GETI '(' left_var ')' ';'                        { $$ = opr(GETI, 1, $3); }
+        | GETC '(' left_var ')' ';'                        { $$ = opr(GETC, 1, $3); }
+        | GETS '(' left_var ')' ';'                        { $$ = opr(GETS, 1, $3); }
         | PUTI '(' arg ')' ';'                             { $$ = opr(PUTI, 1, $3); }
         | PUTI_ '(' arg ')' ';'                            { $$ = opr(PUTI_, 1, $3); }
         | PUTC '(' arg ')' ';'                             { $$ = opr(PUTC, 1, $3); }
         | PUTC_ '(' arg ')' ';'                            { $$ = opr(PUTC_, 1, $3); }
         | PUTS '(' arg ')' ';'                             { $$ = opr(PUTS, 1, $3); }
         | PUTS_ '(' arg ')' ';'                            { $$ = opr(PUTS_, 1, $3); }
-        | variable '=' STRING ';'                          { $$ = sopr('=', 2, $1, var((long) $3, varTypeStr)); }
-        | variable '=' expr ';'                            { $$ = opr('=', 2, $1, $3); }
+        | assignment_list ';'                              { $$ = $1; }
         | FOR '(' stmt stmt stmt ')' stmt                  { $$ = opr(FOR, 4, $3, $4, $5, $7); }
         | WHILE '(' expr ')' stmt                          { $$ = opr(WHILE, 2, $3, $5); }
         | CONTINUE ';'                                     { $$ = opr(CONTINUE, 2, NULL, NULL); }
@@ -125,6 +133,17 @@ stmt:
         | RETURN expr ';'                                  { $$ = opr(RETURN, 1, $2); }
         | RETURN STRING ';'                                { $$ = opr(RETURN, 1, var((long) $2, varTypeStr)); }
         | '{' stmt_list '}'                                { $$ = $2; }
+        | arr_decl_list ';'                                { $$ = $1; }
+        ;
+
+assignment:
+          left_var '=' expr                                { $$ = opr('=', 2, $1, $3); }
+        | left_var '=' STRING                              { $$ = sopr('=', 2, $1, var((long) $3, varTypeStr)); }
+        ;
+
+assignment_list:
+          assignment                                       { $$ = $1; }
+        | assignment_list ',' assignment                   { $$ = opr(',', 2, $1, $3); }
         ;
 
 arg:
@@ -142,7 +161,10 @@ expr:
           INTEGER                                          { $$ = var($1, varTypeInt); }
         | CHAR                                             { $$ = var($1, varTypeChar); }
         | variable                                         { $$ = $1; }
+        | array                                            { $$ = $1; }
         | '-' expr %prec UMINUS                            { $$ = opr(UMINUS, 1, $2); }
+        | '&' expr %prec REF                               { $$ = opr(REF, 1, $2); }
+        | '*' expr %prec DEREF                             { $$ = opr(DEREF, 1, $2); }
         | expr '+' expr                                    { $$ = opr('+', 2, $1, $3); }
         | expr '-' expr                                    { $$ = opr('-', 2, $1, $3); }
         | expr '*' expr                                    { $$ = opr('*', 2, $1, $3); }
@@ -159,6 +181,22 @@ expr:
         | expr OR expr                                     { $$ = opr(OR, 2, $1, $3); }
         | '(' expr ')'                                     { $$ = $2; }
         | RIGHT_VARIABLE '(' args ')'                      { $$ = opr(CALL, 2, nameToNode($1), $3); }
+        ;
+
+arr_decl_list:
+          ARRAY_DECL array                                 { $$ = opr(ARRAY_DECL, 1, $2); }
+        | ARRAY_DECL array '=' expr                        { $$ = opr('=', 2, opr(ARRAY_DECL, 1, $2), $4); }
+        | arr_decl_list ',' array                          { $$ = opr(',', 2, $1, opr(ARRAY_DECL, 1, $3)); }
+        | arr_decl_list ',' array '=' expr                 { $$ = opr(',', 2, $1, opr('=', 2, opr(ARRAY_DECL, 1, $3), $5)); }
+        ;
+
+array:
+          arr_list ']'                                     { $$ = $1; }
+        ;
+
+arr_list:
+          variable '[' expr                                { $$ = arr($1, $3); }
+        | arr_list ']' '[' expr                            { $$ = multiDimensionalizeArray($1, $4); }
         ;
 
 %%
@@ -194,6 +232,45 @@ nodeType *var(long value, varTypeEnum type) {
     } else {
         p->con.value = (int) value;
     }
+
+    return p;
+}
+
+nodeType *arr(nodeType* id, nodeType *offset) {
+    nodeType *p;
+    size_t nodeSize;
+
+    /* allocate node */
+    nodeSize = SIZEOF_NODETYPE + sizeof(arrNodeType);
+    if ((p = malloc(nodeSize)) == NULL)
+        yyerror("out of memory");
+
+    /* copy information */
+    p->type = typeArr;
+    strcpy(p->arr.name, id->id.varName);
+
+    if ((p->arr.offsetListHead = (arrOffsetListNodeType*) malloc(sizeof(arrOffsetListNodeType))) == NULL)
+        yyerror("out of memory");
+    p->arr.offsetListHead->offset = offset;
+    p->arr.offsetListHead->next = NULL;
+    p->arr.offsetListTail = p->arr.offsetListHead;
+    p->arr.dimension = 1;
+
+    return p;
+}
+
+nodeType *multiDimensionalizeArray(nodeType *p, nodeType *offset) {
+    arrOffsetListNodeType* node;
+    if ((node = (arrOffsetListNodeType*) malloc(sizeof(arrOffsetListNodeType))) == NULL)
+        yyerror("out of memory");
+
+    node->offset = offset;
+    node->next = NULL;
+
+    // append
+    p->arr.offsetListTail->next = node;
+    p->arr.offsetListTail = node;
+    p->arr.dimension += 1;
 
     return p;
 }
