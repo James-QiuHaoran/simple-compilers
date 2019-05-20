@@ -4,6 +4,7 @@
 #define REG_NAME_LEN 128
 #define VAR_NAME_LEN 13
 #define STR_MAX_LEN 1024
+#define DIM_STR_LEN 64
 
 #define GLOBAL_TAB_SIZE 256
 #define LOCAL_TAB_SIZE 256
@@ -91,14 +92,22 @@ typedef struct nodeType {
 /* stacks - including symbol tables */
 typedef struct StackSym {
     StrMap *symbol_table;
+    StrMap *arr_dim_sym_tab;
     int num_args;
     int num_local_vars;
     struct StackSym *lower;
 } StackSym;
 
+/* symbol table including dimension table */
+typedef struct SymTab {
+    StrMap *symbol_table;
+    StrMap *arr_dim_sym_tab;
+    int size;
+} SymTab;
+
 /* symbol tables */
-extern StrMap* global_sym_tab;
-extern StrMap* func_sym_tab;
+extern SymTab* global_sym_tab;
+extern SymTab* func_sym_tab;
 extern StackSym* local_sym_tab;
 
 /* strings */

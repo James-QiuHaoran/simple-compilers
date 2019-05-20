@@ -33,9 +33,9 @@ int yylex(void);
 void yyerror(char *s);
 
 /* data */
-StrMap* global_sym_tab;         /* global variable symbol table */
+SymTab* global_sym_tab;         /* global variable symbol table */
 StackSym* local_sym_tab;        /* local varaible symbol table */
-StrMap* func_sym_tab;           /* global function symbol table */
+SymTab* func_sym_tab;           /* global function symbol table */
 StrMap* string_tab;             /* string table */
 StrMap* string_var_tab;         /* string variable table */
 

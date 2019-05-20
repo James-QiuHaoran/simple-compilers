@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <assert.h>
 
 #include "calc3.h"
 #include "y.tab.h"
@@ -22,11 +23,22 @@ void scan(nodeLinkedListType *list);
 /* helper functions */
 int getLabel(char* label, char* name);
 int getHash(char* name);
-int getRegister(char* reg, char* name);
+int getRegister(char* reg, char* name, int size);
 int pushArgsOnStack(nodeType* args, int lbl_kept);
 void constructFuncFrame(funcNodeType* func);
 void destructFuncFrame(funcNodeType* func);
 void mvSPRegPtr(int offset);
+
+int isArrayPtr(nodeType* p);
+StrMap* getArrDimSymTab();
+void declareArray(char* regName, arrNodeType* array, int lbl_kept);
+void putCharArray(nodeType* p, int hasNewLine, int lbl_kept);
+void getCharArray(nodeType* p, int lbl_kept);
+void assignCharArray(nodeType* p, char* str, int lbl_kept);
+void assignArray(nodeType* p, int lbl_kept);
+void pushPtrValue(nodeType* p, int lbl_kept);
+void pushPtr(nodeType* p, int lbl_kept);
+void pushBasePtr(nodeType* p);
 
 /* function definitions */
 // execution of AST on each node
@@ -80,8 +92,22 @@ int ex(nodeType *p, int exType, int nops, ...) {
                 if (!scanning) fprintf(stdout, "\tpush\t%d\n", hashVal);
             } else {
                 // normal case
-                getRegister(reg, p->id.varName);
-                if (!scanning) fprintf(stdout, "\tpush\t%s\n", reg); 
+                if (isArrayPtr(p)) {
+                    pushPtr(p, lbl_kept);
+                } else {
+                    getRegister(reg, p->id.varName, 1);
+                    if (!scanning) fprintf(stdout, "\tpush\t%s\n", reg);
+                }
+            }
+            break;
+        // arrays
+        case typeArr:
+            if (isArrayPtr(p)) {
+                // a pointer
+                pushPtr(p, lbl_kept);
+            } else {
+                // an array
+                pushPtrValue(p, lbl_kept);
             }
             break;
         // operators
@@ -129,18 +155,38 @@ int ex(nodeType *p, int exType, int nops, ...) {
                     break;
                 case GETI:
                     if (!scanning) { fprintf(stdout, "\tgeti\n"); }
-                    getRegister(reg, p->opr.op[0]->id.varName);
-                    if (!scanning) { fprintf(stdout, "\tpop\t%s\n", reg); }
+                    if (p->opr.op[0]->type == typeId) {
+                        getRegister(reg, p->opr.op[0]->id.varName, 1);
+                        if (!scanning) { fprintf(stdout, "\tpop\t%s\n", reg); }
+                    } else if (p->opr.op[0]->type == typeArr) {
+                        pushPtr(p->opr.op[0], lbl_kept);
+                        if (!scanning) { fprintf(stdout, "\n\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
+                    }
                     break;
                 case GETC: 
                     if (!scanning) { fprintf(stdout, "\tgetc\n"); }
-                    getRegister(reg, p->opr.op[0]->id.varName);
-                    if (!scanning) { fprintf(stdout, "\tpop\t%s\n", reg); }
+                    if (p->opr.op[0]->type == typeId) {
+                        getRegister(reg, p->opr.op[0]->id.varName, 1);
+                        if (!scanning) { fprintf(stdout, "\tpop\t%s\n", reg); }
+                    } else if (p->opr.op[0]->type == typeArr) {
+                        pushPtr(p->opr.op[0], lbl_kept);
+                        if (!scanning) { fprintf(stdout, "\n\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
+                    }
                     break;
-                case GETS: 
-                    if (!scanning) { fprintf(stdout, "\tgets\n"); }
-                    getRegister(reg, p->opr.op[0]->id.varName);
-                    if (!scanning) { fprintf(stdout, "\tpop\t%s\n", reg); }
+                case GETS:
+                    if (!isArrayPtr(p->opr.op[0])) {
+                        if (!scanning) { fprintf(stdout, "\tgets\n"); }
+                        if (p->opr.op[0]->type == typeId) {
+                            getRegister(reg, p->opr.op[0]->id.varName, 1);
+                            if (!scanning) { fprintf(stdout, "\tpop\t%s\n", reg); }
+                        } else if (p->opr.op[0]->type == typeArr) {
+                            pushPtr(p->opr.op[0], lbl_kept);
+                            if (!scanning) { fprintf(stdout, "\n\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
+                        }
+                    } else {
+                        // get char array
+                        getCharArray(p->opr.op[0], lbl_kept);
+                    }
                     break;
                 case PUTI: 
                     ex(p->opr.op[0], -1, 1, lbl_kept);
@@ -158,33 +204,88 @@ int ex(nodeType *p, int exType, int nops, ...) {
                     ex(p->opr.op[0], -1, 1, lbl_kept);
                     if (!scanning) { fprintf(stdout, "\tputc_\n"); }
                     break;
-                case PUTS: 
-                    ex(p->opr.op[0], -1, 1, lbl_kept);
-                    if (!scanning) { fprintf(stdout, "\tputs\n"); }
+                case PUTS:
+                    if (!isArrayPtr(p->opr.op[0])) {
+                        // normal strings
+                        ex(p->opr.op[0], -1, 1, lbl_kept);
+                        if (!scanning) { fprintf(stdout, "\tputs\n"); } 
+                    } else {
+                        // char arrays
+                        putCharArray(p->opr.op[0], 1, lbl_kept);
+                    }
                     break;
                 case PUTS_:
-                    ex(p->opr.op[0], -1, 1, lbl_kept);
-                    if (!scanning) { fprintf(stdout, "\tputs_\n"); }
+                    if (!isArrayPtr(p->opr.op[0])) {
+                        // normal strings
+                        ex(p->opr.op[0], -1, 1, lbl_kept);
+                        if (!scanning) { fprintf(stdout, "\tputs_\n"); } 
+                    } else {
+                        // char arrays
+                        putCharArray(p->opr.op[0], 0, lbl_kept);
+                    }
                     break;
-                case '=':  
-                    getRegister(reg, p->opr.op[0]->id.varName);
-                    ex(p->opr.op[1], -1, 1, lbl_kept);
-                    if (p->opr.op[0]->type == typeId) {
-                        if (!scanning) fprintf(stdout, "\tpop\t%s\n", reg);
+                case '=':
+                    if (p->opr.op[0]->type != typeOpr) {
+                        if (!isArrayPtr(p->opr.op[0]) || p->opr.op[1]->type != typeCon || p->opr.op[1]->con.type != varTypeStr) {
+                            if (p->opr.op[0]->type == typeId) {
+                                // variable assignment
+                                getRegister(reg, p->opr.op[0]->id.varName, 1);
+                                ex(p->opr.op[1], -1, 1, lbl_kept);
+                                if (!scanning) { fprintf(stdout, "\n\tpop\t%s\n", reg); }
+                            } else if (p->opr.op[0]->type == typeArr) {
+                                // array assignment
+                                ex(p->opr.op[1], -1, 1, lbl_kept);
+                                pushPtr(p->opr.op[0], lbl_kept);
+                                if (!scanning) { fprintf(stdout, "\n\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
+                            }
+                        } else {
+                            // char array assignment
+                            assignCharArray(p->opr.op[0], p->opr.op[1]->con.strValue, lbl_kept);
+                        }
+                    } else {
+                        switch (p->opr.op[0]->opr.oper) {
+                            case ARRAY_DECL:
+                                // array declaration and assignment
+                                ex(p->opr.op[0], -1, 1, lbl_kept);
+                                // calculate expression
+                                ex(p->opr.op[1], -1, 1, lbl_kept);
+                                if (!scanning) assignArray(p->opr.op[0]->opr.op[0], lbl_kept);
+                                break;
+                            case DEREF:
+                                // dereference assignment
+                                ex(p->opr.op[1], -1, 1, lbl_kept);
+                                ex(p->opr.op[0]->opr.op[0], -1, 1, lbl_kept);
+                                if (!scanning) { fprintf(stdout, "\n\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
+                                break;
+                            default:
+                                break;
+                        }
                     }
                     break;
                 case UMINUS:    
                     ex(p->opr.op[0], -1, 1, lbl_kept);
-                    if (!scanning) fprintf(stdout, "\tneg\n");
+                    if (!scanning) { fprintf(stdout, "\tneg\n"); }
+                    break;
+                case REF:
+                    assert((p->opr.op[0]->type == typeId || p->opr.op[0]->type == typeArr) && !isArrayPtr(p->opr.op[0]));
+                    pushPtr(p->opr.op[0], lbl_kept);
+                    break;
+                case DEREF:
+                    // dereference at right hand side
+                    ex(p->opr.op[0], -1, 1, lbl_kept);
+                    if (!scanning) { fprintf(stdout, "\n\tpop\tac\n"); fprintf(stdout, "\tpush\tac[0]\n"); }
                     break;
                 case CALL:
                     num_args = pushArgsOnStack(p->opr.op[1], lbl_kept);
                     getLabel(labelName, p->opr.op[0]->id.varName);
-                    if (!scanning) fprintf(stdout, "\tcall\t%s, %d\n", labelName, num_args);
+                    if (!scanning) { fprintf(stdout, "\tcall\t%s, %d\n", labelName, num_args); }
                     break;
                 case RETURN:
                     ex(p->opr.op[0], -1, 1, lbl_kept);
-                    if (!scanning) fprintf(stdout, "\tret\n");
+                    if (!scanning) { fprintf(stdout, "\tret\n"); }
+                    break;
+                case ARRAY_DECL:
+                    if (scanning) declareArray(reg, &p->opr.op[0]->arr, lbl_kept);
                     break;
                 case EQ:
                     if (p->opr.op[1]->type == typeCon && p->opr.op[1]->con.type == varTypeStr ||
@@ -199,7 +300,7 @@ int ex(nodeType *p, int exType, int nops, ...) {
                         ex(p->opr.op[0], -1, 1, lbl_kept);
                         ex(p->opr.op[1], -1, 1, lbl_kept);
                     }
-                    if (!scanning) fprintf(stdout, "\tcompEQ\n");
+                    if (!scanning) { fprintf(stdout, "\tcompEQ\n"); }
                     break;
                 default:
                     ex(p->opr.op[0], -1, 1, lbl_kept);
@@ -225,7 +326,7 @@ int ex(nodeType *p, int exType, int nops, ...) {
             constructFuncFrame(&p->func);
             ex(p->func.stmt, -1, 1, lbl_kept);
             destructFuncFrame(&p->func);
-            if (!scanning) fprintf(stdout, "\tret\n");
+            if (!scanning) { fprintf(stdout, "\tret\n"); }
             break;
     }
     return 0;
@@ -275,9 +376,9 @@ void execute() {
 
 // retrieve function label names
 int getLabel(char* label, char* name) {
-    if (sm_exists(func_sym_tab, name)) {
-        sm_get(func_sym_tab, name, label, LBL_NAME_LEN);
-        if (!sm_exists(global_sym_tab, name)) {
+    if (sm_exists(func_sym_tab->symbol_table, name)) {
+        sm_get(func_sym_tab->symbol_table, name, label, LBL_NAME_LEN);
+        if (!sm_exists(global_sym_tab->symbol_table, name)) {
             // success
             return 1;
         } else {
@@ -286,7 +387,7 @@ int getLabel(char* label, char* name) {
         }
     } else {
         sprintf(label, "L%03d", lbl++);
-        sm_put(func_sym_tab, name, label);
+        sm_put(func_sym_tab->symbol_table, name, label);
         return 0;
     }
 }
@@ -309,25 +410,35 @@ int getHash(char* name) {
 }
 
 // retrieve register name
-int getRegister(char* reg, char* name) {
+int getRegister(char* reg, char* name, int size) {
     if (flevel == 0) {
         // main function -> global variable
-        if (sm_exists(global_sym_tab, name)) {
-            sm_get(global_sym_tab, name, reg, REG_NAME_LEN);
+        if (sm_exists(global_sym_tab->symbol_table, name)) {
+            sm_get(global_sym_tab->symbol_table, name, reg, REG_NAME_LEN);
             return 1;
         } else {
-            sprintf(reg, "sb[%d]", sm_get_count(global_sym_tab));
-            sm_put(global_sym_tab, name, reg);
+            if (size <= 0) {
+                fprintf(stderr, "Wrong size [errno: %d]\n", errno);
+                exit(1);
+            }
+            sprintf(reg, "sb[%d]", sm_get_count(global_sym_tab->symbol_table));
+            sm_put(global_sym_tab->symbol_table, name, reg);
+            global_sym_tab->size += size;
             return 0;
         }
     } else if (name[0] == '$') {
         // declare global variables inside a function
-        if (sm_exists(global_sym_tab, name + 1)) {
-            sm_get(global_sym_tab, name + 1, reg, REG_NAME_LEN);
+        if (sm_exists(global_sym_tab->symbol_table, name + 1)) {
+            sm_get(global_sym_tab->symbol_table, name + 1, reg, REG_NAME_LEN);
             return 1;
         } else {
-            sprintf(reg, "sb[%d]", sm_get_count(global_sym_tab));
-            sm_put(global_sym_tab, name + 1, reg);
+            if (size <= 0) {
+                fprintf(stderr, "Wrong size [errno: %d]\n", errno);
+                exit(1);
+            }
+            sprintf(reg, "sb[%d]", sm_get_count(global_sym_tab->symbol_table));
+            sm_put(global_sym_tab->symbol_table, name + 1, reg);
+            global_sym_tab->size += size;
             return 0;
         }
     } else {
@@ -335,14 +446,19 @@ int getRegister(char* reg, char* name) {
         if (sm_exists(local_sym_tab->symbol_table, name)) {
             sm_get(local_sym_tab->symbol_table, name, reg, REG_NAME_LEN);
             return 1;
-        } else if (sm_exists(global_sym_tab, name)) {
+        } else if (sm_exists(global_sym_tab->symbol_table, name)) {
             // then check whether it's in the global symbol table
-            sm_get(global_sym_tab, name, reg, REG_NAME_LEN);
+            sm_get(global_sym_tab->symbol_table, name, reg, REG_NAME_LEN);
             return 1;
         } else {
             // otherwise create the local variable in the local table
+            if (size <= 0) {
+                fprintf(stderr, "Wrong size [errno: %d]\n", errno);
+                exit(1);
+            }
             sprintf(reg, "fp[%d]", local_sym_tab->num_local_vars++);
             sm_put(local_sym_tab->symbol_table, name, reg);
+            local_sym_tab->num_local_vars += size;
             return 0;
         }
     }
@@ -452,11 +568,271 @@ void destructFuncFrame(funcNodeType* func) {
     local_sym_tab = prev;
 }
 
+// return 1 if array ptr and 0 otherwise
+int isArrayPtr(nodeType* p) {
+    StrMap* arr_dim_sym_tab = getArrDimSymTab();
+    char dimension[DIM_STR_LEN];
+    int arr_dimension;
+
+    if (p->type == typeId && sm_exists(arr_dim_sym_tab, p->id.varName)) {
+        return 1;
+    } else if (p->type == typeArr) {
+        if (sm_exists(arr_dim_sym_tab, p->arr.name)) {
+            sm_get(arr_dim_sym_tab, p->arr.name, dimension, DIM_STR_LEN);
+            arr_dimension = atoi(strtok(dimension, ","));
+            return p->arr.dimension < arr_dimension;
+        } else if (sm_exists(local_sym_tab->symbol_table, p->arr.name)) {
+            return 0;
+        }
+    }
+
+    return 0;
+}
+
+// get the array dimension symbol table
+StrMap* getArrDimSymTab() {
+    if (flevel == 0) {
+        return global_sym_tab->arr_dim_sym_tab;
+    } else {
+        return local_sym_tab->arr_dim_sym_tab;
+    }
+}
+
+// array declaration
+void declareArray(char* regName, arrNodeType* array, int lbl_kept) {
+    StrMap* arrayDimTab = getArrDimSymTab();
+    char dimStr[DIM_STR_LEN], buffer[DIM_STR_LEN];
+
+    // calculate offset
+    assert(array->dimension >= 1);
+    arrOffsetListNodeType *n = array->offsetListHead;
+    int offset = n->offset->con.value;
+    sprintf(dimStr, "%d,%d", array->dimension, offset); // prepend count -> count,dim1,dim2,...
+    n = n->next;
+
+    while (n) {
+        // not supporting VLA, always assert static declaration
+        assert(n->offset->type == typeCon); 
+        assert(n->offset->con.type != varTypeStr && n->offset->con.type != varTypeNil); 
+
+        offset *= n->offset->con.value;
+        sprintf(buffer, "%s,%d", dimStr, n->offset->con.value);
+        strcpy(dimStr, buffer);
+        n = n->next;
+    }
+
+    // declare
+    getRegister(regName, array->name, offset);
+    assert(!sm_exists(arrayDimTab, array->name));
+    sm_put(arrayDimTab, array->name, dimStr);
+
+    array->size = offset;
+}
+
+void assignArray(nodeType* p, int lbl_kept) {
+    char regName[REG_NAME_LEN], baseRegName[3] = {0}, baseRegOffset[REG_NAME_LEN] = {0};
+
+    // push base register address
+    pushBasePtr(p);
+    if (!scanning) fprintf(stdout, "\tadd\n");  
+
+    if (!scanning) fprintf(stdout, "\tpop\tac\n");
+    if (!scanning) fprintf(stdout, "\tpop\tac[0]\n");
+
+    // pop to elements
+    for (int i = 1; i < p->arr.size; i++) {
+        if (!scanning) fprintf(stdout, "\tpush\tac[%d]\n", i-1);
+        if (!scanning) fprintf(stdout, "\tpop\tac[%d]\n", i);
+    }
+}
+
+void putCharArray(nodeType* p, int hasNewLine, int lbl_kept) {
+    int lbl1, lbl2;
+
+    pushPtr(p, lbl_kept);
+    if (!scanning) fprintf(stdout, "\tpop\tac\n"); 
+
+    // start push char with loop
+    lbl1 = lbl++;
+    lbl2 = lbl++;
+    if (!scanning) fprintf(stdout, "L%03d:\n", lbl1);
+
+        // jump on value <= 0
+    if (!scanning) fprintf(stdout, "\tpush\tac[0]\n");  
+    if (!scanning) fprintf(stdout, "\tpush\t0\n");  
+    if (!scanning) fprintf(stdout, "\tcompLE\n");
+
+    if (!scanning) fprintf(stdout, "\tj1\tL%03d\n", lbl2);
+
+        // put char
+    if (!scanning) fprintf(stdout, "\tpush\tac[0]\n");
+    if (!scanning) fprintf(stdout, "\tputc_\n");
+
+        // increment index
+    if (!scanning) fprintf(stdout, "\tpush\tac\n");
+    if (!scanning) fprintf(stdout, "\tpush\t1\n");
+    if (!scanning) fprintf(stdout, "\tadd\n");
+    if (!scanning) fprintf(stdout, "\tpop\tac\n"); 
+
+    if (!scanning) fprintf(stdout, "\tjmp\tL%03d\n", lbl1);
+    if (!scanning) fprintf(stdout, "L%03d:\n", lbl2);
+
+    if (hasNewLine) {
+        if (!scanning) fprintf(stdout, "\tpush\t0\n");
+        if (!scanning) fprintf(stdout, "\tputc\n");
+    }
+}
+
+void getCharArray(nodeType* p, int lbl_kept) {
+    int lbl1, lbl2;
+
+    pushPtr(p, lbl_kept);
+    if (!scanning) fprintf(stdout, "\tpop\tac\n"); 
+
+    // start push char with loop
+    lbl1 = lbl++;
+    lbl2 = lbl++;
+    if (!scanning) fprintf(stdout, "L%03d:\n", lbl1);
+
+        // get char
+    if (!scanning) fprintf(stdout, "\tgetc\n");
+    if (!scanning) fprintf(stdout, "\tpop\tac[0]\n");  
+
+        // jump on value == \n
+    if (!scanning) fprintf(stdout, "\tpush\tac[0]\n");  
+    if (!scanning) fprintf(stdout, "\tpush\t%d\n", '\n');  
+    if (!scanning) fprintf(stdout, "\tcompEQ\n");
+
+    if (!scanning) fprintf(stdout, "\tj1\tL%03d\n", lbl2);
+
+        // increment index
+    if (!scanning) fprintf(stdout, "\tpush\tac\n");
+    if (!scanning) fprintf(stdout, "\tpush\t1\n");
+    if (!scanning) fprintf(stdout, "\tadd\n");
+    if (!scanning) fprintf(stdout, "\tpop\tac\n"); 
+
+    if (!scanning) fprintf(stdout, "\tjmp\tL%03d\n", lbl1);
+    if (!scanning) fprintf(stdout, "L%03d:\n", lbl2);
+
+    // mark the last char as \0
+    if (!scanning) fprintf(stdout, "\tpush\t0\n");
+    if (!scanning) fprintf(stdout, "\tpop\tac[0]\n");  
+}
+
+void assignCharArray(nodeType* p, char* str, int lbl_kept) {
+    int l = strlen(str);
+
+    pushPtr(p, lbl_kept);
+    if (!scanning) fprintf(stdout, "\tpop\tac\n"); 
+
+    // start push char by going through each char in string
+    for (int i = 0; i < l; i++) {
+        if (!scanning) fprintf(stdout, "\tpush\t\'%c\'\n", str[i]);
+        if (!scanning) fprintf(stdout, "\tpop\tac[%d]\n", i);
+    }
+
+    // mark the last char as \0
+    if (!scanning) fprintf(stdout, "\tpush\t0\n");
+    if (!scanning) fprintf(stdout, "\tpop\tac[%d]\n", l);  
+}
+
+void pushPtr(nodeType* p, int lbl_kept) {
+    StrMap* arrayDimTab = getArrDimSymTab();
+    char dimStr[DIM_STR_LEN];
+    int dim; char* tempDim;
+    char regName[REG_NAME_LEN];
+
+    if (p->type == typeArr) {
+        if (sm_exists(local_sym_tab->symbol_table, p->arr.name)) {
+            // param is array pointer
+            getRegister(regName, p->arr.name, -1);
+
+            if (!scanning) fprintf(stdout, "\tpush\t%s\n", regName);
+
+            // calculate offset
+            if (!scanning) fprintf(stdout, "\tpush\t0\n"); 
+            arrOffsetListNodeType *n = p->arr.offsetListHead;
+            ex(n->offset, 1, lbl_kept);
+            if (!scanning) fprintf(stdout, "\tadd\n");
+        } else {
+            pushBasePtr(p);
+
+            // calculate offset
+            if (!scanning) fprintf(stdout, "\tpush\t0\n"); 
+            arrOffsetListNodeType *n = p->arr.offsetListHead;
+            ex(n->offset, 1, lbl_kept);
+            if (!scanning) fprintf(stdout, "\tadd\n"); 
+
+            n = n->next;
+            if (sm_exists(arrayDimTab, p->arr.name)) {
+                sm_get(arrayDimTab, p->arr.name, dimStr, DIM_STR_LEN);
+                dim = atoi(strtok(dimStr, ",")); // dummy, dim count
+                dim = atoi(strtok(NULL, ",")); // dummy, first dimension
+
+                while (n) {
+                    dim = atoi(strtok(NULL, ","));
+                    if (!scanning) fprintf(stdout, "\tpush\t%d\n", dim); 
+                    if (!scanning) fprintf(stdout, "\tmul\n"); 
+                    ex(n->offset, 1, lbl_kept);
+                    if (!scanning) fprintf(stdout, "\tadd\n"); 
+
+                    n = n->next;
+                }
+
+                tempDim = strtok(NULL, ",");
+                while (tempDim) {
+                    dim = atoi(tempDim);
+                    if (!scanning) fprintf(stdout, "\tpush\t%d\n", dim); 
+                    if (!scanning) fprintf(stdout, "\tmul\n"); 
+                    tempDim = strtok(NULL, ",");
+                }
+            }
+            if (!scanning) fprintf(stdout, "\tadd\n");
+        }
+    } else if (p->type == typeId) {
+        pushBasePtr(p);
+    }
+
+    if (!scanning) fprintf(stdout, "\tadd\n");    
+}
+
+void pushPtrValue(nodeType* p, int lbl_kept) {
+    pushPtr(p, lbl_kept);
+    if (!scanning) fprintf(stdout, "\n\tpop\tac\n"); 
+    if (!scanning) fprintf(stdout, "\tpush\tac[0]\n");  
+}
+
+void pushBasePtr(nodeType* p) {
+    char regName[REG_NAME_LEN], baseRegName[3] = {0}, baseRegOffset[REG_NAME_LEN] = {0};
+
+    switch(p->type) {
+        case typeArr:
+            getRegister(regName, p->arr.name, -1);
+            break;
+        case typeId:
+            getRegister(regName, p->id.varName, -1);
+            break;
+        default:
+            return;
+    }
+    strncpy(baseRegName, regName, 2);
+    strncpy(baseRegOffset, regName + 3, strlen(regName) - 4);
+
+    if (!scanning) fprintf(stdout, "\tpush\t%s\n", baseRegName);
+    if (!scanning) fprintf(stdout, "\tpush\t%s\n", baseRegOffset);
+}
+
 // program initialization for execution
 void init() {
     // init symbol tables
-    global_sym_tab = sm_new(GLOBAL_TAB_SIZE);
-    func_sym_tab = sm_new(FUNC_TAB_SIZE);
+    global_sym_tab = (SymTab*) malloc(sizeof(SymTab));
+    global_sym_tab->symbol_table = sm_new(GLOBAL_TAB_SIZE);
+    global_sym_tab->arr_dim_sym_tab = sm_new(GLOBAL_TAB_SIZE);
+    global_sym_tab->size = 0;
+    func_sym_tab = (SymTab*) malloc(sizeof(SymTab));
+    func_sym_tab->symbol_table = sm_new(FUNC_TAB_SIZE);
+    func_sym_tab->arr_dim_sym_tab = sm_new(FUNC_TAB_SIZE);
+    func_sym_tab->size = 0;
 
     // init string table
     string_tab = sm_new(GLOBAL_TAB_SIZE);
@@ -481,8 +857,10 @@ void init() {
 // terminate and wrap up
 void end() {
     // delete symbol tables
-    sm_delete(global_sym_tab);
-    sm_delete(func_sym_tab);
+    sm_delete(global_sym_tab->symbol_table);
+    sm_delete(func_sym_tab->symbol_table);
+    sm_delete(global_sym_tab->arr_dim_sym_tab);
+    sm_delete(func_sym_tab->arr_dim_sym_tab);
 
     // delete string table
     sm_delete(string_tab);
@@ -490,6 +868,8 @@ void end() {
 
     // free the local symbol table
     free(local_sym_tab);
+    free(global_sym_tab);
+    free(func_sym_tab);
 
     // free the node lists for functions
     nodeInListType *trash = funcs->head;
@@ -525,7 +905,7 @@ void start() {
     scan(funcs);
 
     // make room for global variables
-    int numOfGlobalVars = sm_get_count(global_sym_tab);
+    int numOfGlobalVars = sm_get_count(global_sym_tab->symbol_table);
     if (numOfGlobalVars) {
         mvSPRegPtr(numOfGlobalVars);
     }
