@@ -8,10 +8,8 @@
 	gets
 	pop	sb[0]
 	push	sb[0]
-
 	pop	sb[1]
 	push	"test!"
-
 	pop	sb[2]
 	push	sb[1]
 	puts_

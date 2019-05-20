@@ -3,13 +3,10 @@
 	add
 	pop	sp
 	push	100
-
 	pop	sb[0]
 	push	100
-
 	pop	sb[1]
 	push	200
-
 	pop	sb[2]
 	push	sb[0]
 	push	sb[1]

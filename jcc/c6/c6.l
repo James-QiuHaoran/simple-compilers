@@ -33,6 +33,7 @@ char stringVarContent[STR_MAX_LEN]; // a string cannot exceed 1024 chars
 '\\v'                { yylval.intValue = (int) '\v'; return CHAR; }
 '\\f'                { yylval.intValue = (int) '\f'; return CHAR; }
 '\\r'                { yylval.intValue = (int) '\r'; return CHAR; }
+'\\0'                { yylval.intValue = 0; return INTEGER; }
 '[^']'               { yylval.intValue = (int) yytext[1]; return CHAR; }
 
 \"                   { BEGIN STR; *stringVarContent = 0; }

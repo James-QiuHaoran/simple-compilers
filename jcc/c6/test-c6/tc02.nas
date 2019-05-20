@@ -29,7 +29,6 @@
 	push	ac[3]
 	pop	ac[4]
 	push	0
-
 	pop	sb[9]
 L011:
 	push	sb[9]
@@ -49,7 +48,6 @@ L011:
 	add
 	add
 	add
-
 	pop	ac
 	push	ac[0]
 	puti
@@ -66,7 +64,6 @@ L011:
 	add
 	add
 	add
-
 	pop	ac
 	push	ac[0]
 	puti
@@ -74,12 +71,10 @@ L009:
 	push	sb[9]
 	push	1
 	add
-
 	pop	sb[9]
 	jmp	L011
 L010:
 	push	0
-
 	pop	sb[9]
 L014:
 	push	sb[9]
@@ -97,7 +92,6 @@ L014:
 	add
 	add
 	add
-
 	pop	ac
 	push	ac[0]
 	puti_
@@ -112,7 +106,6 @@ L014:
 	add
 	add
 	add
-
 	pop	ac
 	push	ac[0]
 	push	sb
@@ -122,7 +115,6 @@ L014:
 	add
 	add
 	add
-
 	pop	ac
 	push	ac[0]
 	add
@@ -133,6 +125,7 @@ L014:
 	push	87
 	add
 	puti
+	// array assignment: a
 	push	sb
 	push	4
 	push	0
@@ -140,7 +133,6 @@ L014:
 	add
 	add
 	add
-
 	pop	ac
 	push	ac[0]
 	push	100
@@ -152,7 +144,6 @@ L014:
 	add
 	add
 	add
-
 	pop	ac
 	pop	ac[0]
 	push	sb
@@ -162,7 +153,6 @@ L014:
 	add
 	add
 	add
-
 	pop	ac
 	push	ac[0]
 	puti_
@@ -174,7 +164,6 @@ L012:
 	push	sb[9]
 	push	1
 	add
-
 	pop	sb[9]
 	jmp	L014
 L013:
@@ -183,7 +172,6 @@ L013:
 	push	sb[9]
 	puti
 	push	1
-
 	pop	sb[9]
 L017:
 	push	sb[9]
@@ -199,7 +187,6 @@ L017:
 	add
 	add
 	add
-
 	pop	ac
 	push	ac[0]
 	puti_
@@ -213,7 +200,6 @@ L015:
 	push	sb[9]
 	push	1
 	add
-
 	pop	sb[9]
 	jmp	L017
 L016:

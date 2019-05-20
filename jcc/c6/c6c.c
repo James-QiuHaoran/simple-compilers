@@ -31,11 +31,11 @@ void mvSPRegPtr(int offset);
 
 int isArrayPtr(nodeType* p);
 StrMap* getArrDimSymTab();
-void declareArray(char* regName, arrNodeType* array, int lbl_kept);
+void declareArray(char* reg, arrNodeType* array, int lbl_kept);
 void putCharArray(nodeType* p, int hasNewLine, int lbl_kept);
 void getCharArray(nodeType* p, int lbl_kept);
 void assignCharArray(nodeType* p, char* str, int lbl_kept);
-void assignArray(nodeType* p, int lbl_kept);
+void assignArray(nodeType* p);
 void pushPtrValue(nodeType* p, int lbl_kept);
 void pushPtr(nodeType* p, int lbl_kept);
 void pushBasePtr(nodeType* p);
@@ -160,7 +160,7 @@ int ex(nodeType *p, int exType, int nops, ...) {
                         if (!scanning) { fprintf(stdout, "\tpop\t%s\n", reg); }
                     } else if (p->opr.op[0]->type == typeArr) {
                         pushPtr(p->opr.op[0], lbl_kept);
-                        if (!scanning) { fprintf(stdout, "\n\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
+                        if (!scanning) { fprintf(stdout, "\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
                     }
                     break;
                 case GETC: 
@@ -170,7 +170,7 @@ int ex(nodeType *p, int exType, int nops, ...) {
                         if (!scanning) { fprintf(stdout, "\tpop\t%s\n", reg); }
                     } else if (p->opr.op[0]->type == typeArr) {
                         pushPtr(p->opr.op[0], lbl_kept);
-                        if (!scanning) { fprintf(stdout, "\n\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
+                        if (!scanning) { fprintf(stdout, "\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
                     }
                     break;
                 case GETS:
@@ -181,7 +181,7 @@ int ex(nodeType *p, int exType, int nops, ...) {
                             if (!scanning) { fprintf(stdout, "\tpop\t%s\n", reg); }
                         } else if (p->opr.op[0]->type == typeArr) {
                             pushPtr(p->opr.op[0], lbl_kept);
-                            if (!scanning) { fprintf(stdout, "\n\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
+                            if (!scanning) { fprintf(stdout, "\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
                         }
                     } else {
                         // get char array
@@ -231,12 +231,13 @@ int ex(nodeType *p, int exType, int nops, ...) {
                                 // variable assignment
                                 getRegister(reg, p->opr.op[0]->id.varName, 1);
                                 ex(p->opr.op[1], -1, 1, lbl_kept);
-                                if (!scanning) { fprintf(stdout, "\n\tpop\t%s\n", reg); }
+                                if (!scanning) { fprintf(stdout, "\tpop\t%s\n", reg); }
                             } else if (p->opr.op[0]->type == typeArr) {
                                 // array assignment
+                                if (!scanning) printf("\t// array assignment: %s\n", p->opr.op[0]->arr.name);
                                 ex(p->opr.op[1], -1, 1, lbl_kept);
                                 pushPtr(p->opr.op[0], lbl_kept);
-                                if (!scanning) { fprintf(stdout, "\n\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
+                                if (!scanning) { fprintf(stdout, "\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
                             }
                         } else {
                             // char array assignment
@@ -249,13 +250,13 @@ int ex(nodeType *p, int exType, int nops, ...) {
                                 ex(p->opr.op[0], -1, 1, lbl_kept);
                                 // calculate expression
                                 ex(p->opr.op[1], -1, 1, lbl_kept);
-                                if (!scanning) assignArray(p->opr.op[0]->opr.op[0], lbl_kept);
+                                if (!scanning) assignArray(p->opr.op[0]->opr.op[0]);
                                 break;
                             case DEREF:
                                 // dereference assignment
                                 ex(p->opr.op[1], -1, 1, lbl_kept);
                                 ex(p->opr.op[0]->opr.op[0], -1, 1, lbl_kept);
-                                if (!scanning) { fprintf(stdout, "\n\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
+                                if (!scanning) { fprintf(stdout, "\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
                                 break;
                             default:
                                 break;
@@ -273,7 +274,7 @@ int ex(nodeType *p, int exType, int nops, ...) {
                 case DEREF:
                     // dereference at right hand side
                     ex(p->opr.op[0], -1, 1, lbl_kept);
-                    if (!scanning) { fprintf(stdout, "\n\tpop\tac\n"); fprintf(stdout, "\tpush\tac[0]\n"); }
+                    if (!scanning) { fprintf(stdout, "\tpop\tac\n"); fprintf(stdout, "\tpush\tac[0]\n"); }
                     break;
                 case CALL:
                     num_args = pushArgsOnStack(p->opr.op[1], lbl_kept);
@@ -286,6 +287,10 @@ int ex(nodeType *p, int exType, int nops, ...) {
                     break;
                 case ARRAY_DECL:
                     if (scanning) declareArray(reg, &p->opr.op[0]->arr, lbl_kept);
+                    break;
+                case ',':
+                    ex(p->opr.op[0], -1, 1, lbl_kept);
+                    ex(p->opr.op[1], -1, 1, lbl_kept);
                     break;
                 case EQ:
                     if (p->opr.op[1]->type == typeCon && p->opr.op[1]->con.type == varTypeStr ||
@@ -564,7 +569,7 @@ void destructFuncFrame(funcNodeType* func) {
     sm_delete(local_sym_tab->symbol_table);
     free(local_sym_tab);
 
-    // update current frame
+    // update the current frame
     local_sym_tab = prev;
 }
 
@@ -599,90 +604,86 @@ StrMap* getArrDimSymTab() {
 }
 
 // array declaration
-void declareArray(char* regName, arrNodeType* array, int lbl_kept) {
+void declareArray(char* reg, arrNodeType* array, int lbl_kept) {
     StrMap* arrayDimTab = getArrDimSymTab();
-    char dimStr[DIM_STR_LEN], buffer[DIM_STR_LEN];
+    char dimension[DIM_STR_LEN], buffer[DIM_STR_LEN];
 
     // calculate offset
     assert(array->dimension >= 1);
-    arrOffsetListNodeType *n = array->offsetListHead;
-    int offset = n->offset->con.value;
-    sprintf(dimStr, "%d,%d", array->dimension, offset); // prepend count -> count,dim1,dim2,...
-    n = n->next;
+    arrOffsetListNodeType *node = array->offsetListHead;
+    int offset = node->offset->con.value;
+    sprintf(dimension, "%d,%d", array->dimension, offset);
+    node = node->next;
 
-    while (n) {
-        // not supporting VLA, always assert static declaration
-        assert(n->offset->type == typeCon); 
-        assert(n->offset->con.type != varTypeStr && n->offset->con.type != varTypeNil); 
+    while (node) {
+        // only support static declaration
+        assert(node->offset->type == typeCon); 
+        assert(node->offset->con.type != varTypeStr && node->offset->con.type != varTypeNil); 
 
-        offset *= n->offset->con.value;
-        sprintf(buffer, "%s,%d", dimStr, n->offset->con.value);
-        strcpy(dimStr, buffer);
-        n = n->next;
+        offset *= node->offset->con.value;
+        sprintf(buffer, "%s,%d", dimension, node->offset->con.value);
+        strcpy(dimension, buffer);
+        node = node->next;
     }
 
     // declare
-    getRegister(regName, array->name, offset);
+    getRegister(reg, array->name, offset);
     assert(!sm_exists(arrayDimTab, array->name));
-    sm_put(arrayDimTab, array->name, dimStr);
+    sm_put(arrayDimTab, array->name, dimension);
 
     array->size = offset;
 }
 
-void assignArray(nodeType* p, int lbl_kept) {
-    char regName[REG_NAME_LEN], baseRegName[3] = {0}, baseRegOffset[REG_NAME_LEN] = {0};
-
+// array assignment
+void assignArray(nodeType* p) {
     // push base register address
     pushBasePtr(p);
-    if (!scanning) fprintf(stdout, "\tadd\n");  
+    if (!scanning) { fprintf(stdout, "\tadd\n"); fprintf(stdout, "\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
 
-    if (!scanning) fprintf(stdout, "\tpop\tac\n");
-    if (!scanning) fprintf(stdout, "\tpop\tac[0]\n");
-
-    // pop to elements
+    // pop to each element
     for (int i = 1; i < p->arr.size; i++) {
-        if (!scanning) fprintf(stdout, "\tpush\tac[%d]\n", i-1);
-        if (!scanning) fprintf(stdout, "\tpop\tac[%d]\n", i);
+        if (!scanning) { fprintf(stdout, "\tpush\tac[%d]\n", i-1); fprintf(stdout, "\tpop\tac[%d]\n", i); }
     }
 }
 
+// put char array
 void putCharArray(nodeType* p, int hasNewLine, int lbl_kept) {
     int lbl1, lbl2;
 
     pushPtr(p, lbl_kept);
     if (!scanning) fprintf(stdout, "\tpop\tac\n"); 
 
-    // start push char with loop
     lbl1 = lbl++;
     lbl2 = lbl++;
-    if (!scanning) fprintf(stdout, "L%03d:\n", lbl1);
-
-        // jump on value <= 0
-    if (!scanning) fprintf(stdout, "\tpush\tac[0]\n");  
-    if (!scanning) fprintf(stdout, "\tpush\t0\n");  
-    if (!scanning) fprintf(stdout, "\tcompLE\n");
-
-    if (!scanning) fprintf(stdout, "\tj1\tL%03d\n", lbl2);
+    if (!scanning) {
+        // start push char with loop
+        fprintf(stdout, "L%03d:\n", lbl1);
+        fprintf(stdout, "\tpush\tac[0]\n");
+        fprintf(stdout, "\tpush\t0\n");
+        fprintf(stdout, "\tcompLE\n");
+        fprintf(stdout, "\tj1\tL%03d\n", lbl2);
 
         // put char
-    if (!scanning) fprintf(stdout, "\tpush\tac[0]\n");
-    if (!scanning) fprintf(stdout, "\tputc_\n");
+        fprintf(stdout, "\tpush\tac[0]\n");
+        fprintf(stdout, "\tputc_\n");
 
         // increment index
-    if (!scanning) fprintf(stdout, "\tpush\tac\n");
-    if (!scanning) fprintf(stdout, "\tpush\t1\n");
-    if (!scanning) fprintf(stdout, "\tadd\n");
-    if (!scanning) fprintf(stdout, "\tpop\tac\n"); 
+        fprintf(stdout, "\tpush\tac\n");
+        fprintf(stdout, "\tpush\t1\n");
+        fprintf(stdout, "\tadd\n");
+        fprintf(stdout, "\tpop\tac\n");
 
-    if (!scanning) fprintf(stdout, "\tjmp\tL%03d\n", lbl1);
-    if (!scanning) fprintf(stdout, "L%03d:\n", lbl2);
+        fprintf(stdout, "\tjmp\tL%03d\n", lbl1);
+        fprintf(stdout, "L%03d:\n", lbl2);
 
-    if (hasNewLine) {
-        if (!scanning) fprintf(stdout, "\tpush\t0\n");
-        if (!scanning) fprintf(stdout, "\tputc\n");
+        if (hasNewLine) {
+            fprintf(stdout, "\tpush\t0\n");
+            fprintf(stdout, "\tputc\n");
+        }
     }
 }
 
+// get char array
 void getCharArray(nodeType* p, int lbl_kept) {
     int lbl1, lbl2;
 
@@ -692,33 +693,36 @@ void getCharArray(nodeType* p, int lbl_kept) {
     // start push char with loop
     lbl1 = lbl++;
     lbl2 = lbl++;
-    if (!scanning) fprintf(stdout, "L%03d:\n", lbl1);
+    if (!scanning) {
+        fprintf(stdout, "L%03d:\n", lbl1);
 
-    // get char
-    if (!scanning) fprintf(stdout, "\tgetc\n");
-    if (!scanning) fprintf(stdout, "\tpop\tac[0]\n");  
+        // get char
+        fprintf(stdout, "\tgetc\n");
+        fprintf(stdout, "\tpop\tac[0]\n");  
 
-    // jump on value == \n
-    if (!scanning) fprintf(stdout, "\tpush\tac[0]\n");  
-    if (!scanning) fprintf(stdout, "\tpush\t%d\n", '\n');  
-    if (!scanning) fprintf(stdout, "\tcompEQ\n");
+        // jump on value == \n
+        fprintf(stdout, "\tpush\tac[0]\n");  
+        fprintf(stdout, "\tpush\t%d\n", '\n');  
+        fprintf(stdout, "\tcompEQ\n");
 
-    if (!scanning) fprintf(stdout, "\tj1\tL%03d\n", lbl2);
+        fprintf(stdout, "\tj1\tL%03d\n", lbl2);
 
-    // increment index
-    if (!scanning) fprintf(stdout, "\tpush\tac\n");
-    if (!scanning) fprintf(stdout, "\tpush\t1\n");
-    if (!scanning) fprintf(stdout, "\tadd\n");
-    if (!scanning) fprintf(stdout, "\tpop\tac\n"); 
+        // increment index
+        fprintf(stdout, "\tpush\tac\n");
+        fprintf(stdout, "\tpush\t1\n");
+        fprintf(stdout, "\tadd\n");
+        fprintf(stdout, "\tpop\tac\n"); 
 
-    if (!scanning) fprintf(stdout, "\tjmp\tL%03d\n", lbl1);
-    if (!scanning) fprintf(stdout, "L%03d:\n", lbl2);
+        fprintf(stdout, "\tjmp\tL%03d\n", lbl1);
+        fprintf(stdout, "L%03d:\n", lbl2);
 
-    // mark the last char as \0
-    if (!scanning) fprintf(stdout, "\tpush\t0\n");
-    if (!scanning) fprintf(stdout, "\tpop\tac[0]\n");  
+        // mark the last char as \0
+        fprintf(stdout, "\tpush\t0\n");
+        fprintf(stdout, "\tpop\tac[0]\n");  
+    }
 }
 
+// char array assignment
 void assignCharArray(nodeType* p, char* str, int lbl_kept) {
     int l = strlen(str);
 
@@ -727,64 +731,61 @@ void assignCharArray(nodeType* p, char* str, int lbl_kept) {
 
     // start push char by going through each char in string
     for (int i = 0; i < l; i++) {
-        if (!scanning) fprintf(stdout, "\tpush\t\'%c\'\n", str[i]);
-        if (!scanning) fprintf(stdout, "\tpop\tac[%d]\n", i);
+        if (!scanning) { fprintf(stdout, "\tpush\t\'%c\'\n", str[i]); fprintf(stdout, "\tpop\tac[%d]\n", i); }
     }
 
     // mark the last char as \0
-    if (!scanning) fprintf(stdout, "\tpush\t0\n");
-    if (!scanning) fprintf(stdout, "\tpop\tac[%d]\n", l);  
+    if (!scanning) { fprintf(stdout, "\tpush\t0\n"); fprintf(stdout, "\tpop\tac[%d]\n", l); }
 }
 
+// push pointer
 void pushPtr(nodeType* p, int lbl_kept) {
-    StrMap* arrayDimTab = getArrDimSymTab();
-    char dimStr[DIM_STR_LEN];
-    int dim; char* tempDim;
-    char regName[REG_NAME_LEN];
+    StrMap* arrDimTab = getArrDimSymTab();
+    char dimension[DIM_STR_LEN];
+    int dim; 
+    char* temp_dim;
+    char reg[REG_NAME_LEN];
 
     if (p->type == typeArr) {
         if (sm_exists(local_sym_tab->symbol_table, p->arr.name)) {
-            // param is array pointer
-            getRegister(regName, p->arr.name, -1);
+            // param is an array pointer
+            getRegister(reg, p->arr.name, -1);
+            if (!scanning) fprintf(stdout, "\tpush\t%s\n", reg);
 
-            if (!scanning) fprintf(stdout, "\tpush\t%s\n", regName);
-
-            // calculate offset
+            // calculate the offset
             if (!scanning) fprintf(stdout, "\tpush\t0\n"); 
-            arrOffsetListNodeType *n = p->arr.offsetListHead;
-            ex(n->offset, 1, lbl_kept);
+            arrOffsetListNodeType *node = p->arr.offsetListHead;
+            ex(node->offset, 1, lbl_kept);
             if (!scanning) fprintf(stdout, "\tadd\n");
         } else {
             pushBasePtr(p);
 
             // calculate offset
             if (!scanning) fprintf(stdout, "\tpush\t0\n"); 
-            arrOffsetListNodeType *n = p->arr.offsetListHead;
-            ex(n->offset, 1, lbl_kept);
+            arrOffsetListNodeType *node = p->arr.offsetListHead;
+            ex(node->offset, 1, lbl_kept);
             if (!scanning) fprintf(stdout, "\tadd\n"); 
 
-            n = n->next;
-            if (sm_exists(arrayDimTab, p->arr.name)) {
-                sm_get(arrayDimTab, p->arr.name, dimStr, DIM_STR_LEN);
-                dim = atoi(strtok(dimStr, ",")); // dummy, dim count
-                dim = atoi(strtok(NULL, ",")); // dummy, first dimension
+            node = node->next;
+            if (sm_exists(arrDimTab, p->arr.name)) {
+                sm_get(arrDimTab, p->arr.name, dimension, DIM_STR_LEN);
+                dim = atoi(strtok(dimension, ",")); // dummy
+                dim = atoi(strtok(NULL, ","));      // dummy
 
-                while (n) {
+                while (node) {
                     dim = atoi(strtok(NULL, ","));
-                    if (!scanning) fprintf(stdout, "\tpush\t%d\n", dim); 
-                    if (!scanning) fprintf(stdout, "\tmul\n"); 
-                    ex(n->offset, 1, lbl_kept);
+                    if (!scanning) { fprintf(stdout, "\tpush\t%d\n", dim); fprintf(stdout, "\tmul\n"); }
+                    ex(node->offset, 1, lbl_kept);
                     if (!scanning) fprintf(stdout, "\tadd\n"); 
 
-                    n = n->next;
+                    node = node->next;
                 }
 
-                tempDim = strtok(NULL, ",");
-                while (tempDim) {
-                    dim = atoi(tempDim);
-                    if (!scanning) fprintf(stdout, "\tpush\t%d\n", dim); 
-                    if (!scanning) fprintf(stdout, "\tmul\n"); 
-                    tempDim = strtok(NULL, ",");
+                temp_dim = strtok(NULL, ",");
+                while (temp_dim) {
+                    dim = atoi(temp_dim);
+                    if (!scanning) { fprintf(stdout, "\tpush\t%d\n", dim); fprintf(stdout, "\tmul\n"); }
+                    temp_dim = strtok(NULL, ",");
                 }
             }
             if (!scanning) fprintf(stdout, "\tadd\n");
@@ -796,30 +797,30 @@ void pushPtr(nodeType* p, int lbl_kept) {
     if (!scanning) fprintf(stdout, "\tadd\n");    
 }
 
+// push pointer value
 void pushPtrValue(nodeType* p, int lbl_kept) {
     pushPtr(p, lbl_kept);
-    if (!scanning) fprintf(stdout, "\n\tpop\tac\n"); 
-    if (!scanning) fprintf(stdout, "\tpush\tac[0]\n");  
+    if (!scanning) { fprintf(stdout, "\tpop\tac\n"); fprintf(stdout, "\tpush\tac[0]\n"); }
 }
 
+// push base pointer for array and variable
 void pushBasePtr(nodeType* p) {
-    char regName[REG_NAME_LEN], baseRegName[3] = {0}, baseRegOffset[REG_NAME_LEN] = {0};
+    char reg[REG_NAME_LEN], baseReg[3] = {0}, baseRegOffset[REG_NAME_LEN] = {0};
 
     switch(p->type) {
         case typeArr:
-            getRegister(regName, p->arr.name, -1);
+            getRegister(reg, p->arr.name, -1);
             break;
         case typeId:
-            getRegister(regName, p->id.varName, -1);
+            getRegister(reg, p->id.varName, -1);
             break;
         default:
             return;
     }
-    strncpy(baseRegName, regName, 2);
-    strncpy(baseRegOffset, regName + 3, strlen(regName) - 4);
+    strncpy(baseReg, reg, 2);
+    strncpy(baseRegOffset, reg + 3, strlen(reg) - 4);
 
-    if (!scanning) fprintf(stdout, "\tpush\t%s\n", baseRegName);
-    if (!scanning) fprintf(stdout, "\tpush\t%s\n", baseRegOffset);
+    if (!scanning) { fprintf(stdout, "\tpush\t%s\n", baseReg); fprintf(stdout, "\tpush\t%s\n", baseRegOffset); }
 }
 
 // program initialization for execution

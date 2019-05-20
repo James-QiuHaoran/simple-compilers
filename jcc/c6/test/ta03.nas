@@ -3,13 +3,10 @@
 	add
 	pop	sp
 	push	34
-
 	pop	sb[0]
 	push	'd'
-
 	pop	sb[1]
 	push	"test~"
-
 	pop	sb[2]
 	push	sb[0]
 	puti

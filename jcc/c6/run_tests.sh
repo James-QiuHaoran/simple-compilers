@@ -13,7 +13,7 @@ do
 	printf "\n>>>> Source code:\n\n"
 	cat $i
 	echo ""
-	printf ">>>> Result:\n\n"
+	printf "\n>>>> Result:\n\n"
 
 	if [ "$counter" -eq "3" ]
 	then
@@ -52,13 +52,18 @@ do
 	echo "+++++++++++++++++++++++++++++++++++"
 	echo "|          $i           |"
 	echo "+++++++++++++++++++++++++++++++++++"
-	./c6c $i > test-c6/${i:8:4}.nas
+	./c6c < $i > test-c6/${i:8:4}.nas
 	printf "\n>>>> Source code:\n\n"
 	cat $i
 	echo ""
-	printf ">>>> Result:\n\n"
+	printf "\n>>>> Result:\n\n"
 
-    ./nas test-c6/${i:8:4}.nas > output
+	if [ "$counter" -eq "17" ]
+        then
+                ./nas < test-c6/${i:8:4}.nas > output
+        else
+        	./nas test-c6/${i:8:4}.nas > output
+	fi
 
 	cat output
 	printf "\n>>>> Sample answer:\n\n"

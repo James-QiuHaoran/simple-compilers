@@ -2,9 +2,9 @@
 
 #define LBL_NAME_LEN 8
 #define REG_NAME_LEN 128
-#define VAR_NAME_LEN 13
+#define VAR_NAME_LEN 14
 #define STR_MAX_LEN 1024
-#define DIM_STR_LEN 64
+#define DIM_STR_LEN 128
 
 #define GLOBAL_TAB_SIZE 256
 #define LOCAL_TAB_SIZE 256

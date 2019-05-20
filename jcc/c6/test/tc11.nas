@@ -7,7 +7,6 @@
 	end
 L000:
 	push	10
-
 	pop	sb[0]
 	ret
 L001:
