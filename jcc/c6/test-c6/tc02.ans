@@ -1,0 +1,30 @@
+a[0] = 78
+b[0] = 87
+a[1] = 78
+b[1] = 87
+a[2] = 78
+b[2] = 87
+a[3] = 78
+b[3] = 87
+i = 0
+78(a[i]) should be equal to 78
+165(a[i]+b[i]) should be equal to 165
+187(a[i]) now should be equal to 187
+i = 1
+78(a[i]) should be equal to 78
+165(a[i]+b[i]) should be equal to 165
+187(a[i]) now should be equal to 187
+i = 2
+78(a[i]) should be equal to 78
+165(a[i]+b[i]) should be equal to 165
+187(a[i]) now should be equal to 187
+i = 3
+78(a[i]) should be equal to 78
+165(a[i]+b[i]) should be equal to 165
+187(a[i]) now should be equal to 187
+i = 4
+87 should be equal to 187
+87 should be equal to 187
+87 should be equal to 187
+87 should be equal to 187
+87 should be equal to 187

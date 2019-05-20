@@ -421,7 +421,7 @@ int getRegister(char* reg, char* name, int size) {
                 fprintf(stderr, "Wrong size [errno: %d]\n", errno);
                 exit(1);
             }
-            sprintf(reg, "sb[%d]", sm_get_count(global_sym_tab->symbol_table));
+            sprintf(reg, "sb[%d]", global_sym_tab->size); // sm_get_count(global_sym_tab->symbol_table));
             sm_put(global_sym_tab->symbol_table, name, reg);
             global_sym_tab->size += size;
             return 0;
@@ -436,7 +436,7 @@ int getRegister(char* reg, char* name, int size) {
                 fprintf(stderr, "Wrong size [errno: %d]\n", errno);
                 exit(1);
             }
-            sprintf(reg, "sb[%d]", sm_get_count(global_sym_tab->symbol_table));
+            sprintf(reg, "sb[%d]", global_sym_tab->size); // sm_get_count(global_sym_tab->symbol_table));
             sm_put(global_sym_tab->symbol_table, name + 1, reg);
             global_sym_tab->size += size;
             return 0;
@@ -694,18 +694,18 @@ void getCharArray(nodeType* p, int lbl_kept) {
     lbl2 = lbl++;
     if (!scanning) fprintf(stdout, "L%03d:\n", lbl1);
 
-        // get char
+    // get char
     if (!scanning) fprintf(stdout, "\tgetc\n");
     if (!scanning) fprintf(stdout, "\tpop\tac[0]\n");  
 
-        // jump on value == \n
+    // jump on value == \n
     if (!scanning) fprintf(stdout, "\tpush\tac[0]\n");  
     if (!scanning) fprintf(stdout, "\tpush\t%d\n", '\n');  
     if (!scanning) fprintf(stdout, "\tcompEQ\n");
 
     if (!scanning) fprintf(stdout, "\tj1\tL%03d\n", lbl2);
 
-        // increment index
+    // increment index
     if (!scanning) fprintf(stdout, "\tpush\tac\n");
     if (!scanning) fprintf(stdout, "\tpush\t1\n");
     if (!scanning) fprintf(stdout, "\tadd\n");
@@ -832,7 +832,6 @@ void init() {
     func_sym_tab = (SymTab*) malloc(sizeof(SymTab));
     func_sym_tab->symbol_table = sm_new(FUNC_TAB_SIZE);
     func_sym_tab->arr_dim_sym_tab = sm_new(FUNC_TAB_SIZE);
-    func_sym_tab->size = 0;
 
     // init string table
     string_tab = sm_new(GLOBAL_TAB_SIZE);
@@ -905,7 +904,7 @@ void start() {
     scan(funcs);
 
     // make room for global variables
-    int numOfGlobalVars = sm_get_count(global_sym_tab->symbol_table);
+    int numOfGlobalVars = global_sym_tab->size; // sm_get_count(global_sym_tab->symbol_table);
     if (numOfGlobalVars) {
         mvSPRegPtr(numOfGlobalVars);
     }
