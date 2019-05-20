@@ -5,7 +5,9 @@
 	push	"Enter a char:
 "
 	puts_
+	// input getc
 	getc
+	// save to variable a
 	pop	sb[0]
 	push	sb[0]
 	pop	sb[1]

@@ -18,3 +18,7 @@ puts_("i = "); puti(i);
 for (i = 1; i < 6; i = i + 1;) {
     puti_(b[i-1]); puts_(" should be equal to "); puti(87 + 100);
 }
+
+// reassignment
+a[0] = 1;
+puts_("a[0] now is assigned to "); puti(a[0]);

@@ -13,6 +13,8 @@ extern int errno;         // error number
 static int scanning = 0;  // 1 for scanning; 0 for execution
 static int flevel = 0;    // current function call level
 
+static int debug = 0;     // 1 for debugging mode and 0 otherwise
+
 /* program init & end functions */
 void init();
 void end();
@@ -60,7 +62,8 @@ int ex(nodeType *p, int exType, int nops, ...) {
 
     switch(p->type) {
         // constants
-        case typeCon:       
+        case typeCon:
+            if (debug) fprintf(stdout, "\t// push constants\n");
             switch(p->con.type){
                 case varTypeInt:
                     // integer
@@ -93,8 +96,10 @@ int ex(nodeType *p, int exType, int nops, ...) {
             } else {
                 // normal case
                 if (isArrayPtr(p)) {
+                    if (debug) fprintf(stdout, "\t// push pointer %s\n", p->id.varName);
                     pushPtr(p, lbl_kept);
                 } else {
+                    if (debug) fprintf(stdout, "\t// push variable %s\n", p->id.varName);
                     getRegister(reg, p->id.varName, 1);
                     if (!scanning) fprintf(stdout, "\tpush\t%s\n", reg);
                 }
@@ -104,9 +109,11 @@ int ex(nodeType *p, int exType, int nops, ...) {
         case typeArr:
             if (isArrayPtr(p)) {
                 // a pointer
+                if (debug) fprintf(stdout, "\t// push pointer %s\n", p->arr.name);
                 pushPtr(p, lbl_kept);
             } else {
                 // an array
+                if (debug) fprintf(stdout, "\t// push array %s\n", p->arr.name);
                 pushPtrValue(p, lbl_kept);
             }
             break;
@@ -114,6 +121,7 @@ int ex(nodeType *p, int exType, int nops, ...) {
         case typeOpr:
             switch(p->opr.oper) {
                 case FOR:
+                    if (debug) fprintf(stdout, "\t// for loop\n");
                     lbl3 = lbl++;
                     lbl2 = lbl++;
                     lbl1 = lbl++;
@@ -127,6 +135,7 @@ int ex(nodeType *p, int exType, int nops, ...) {
                     if (!scanning) { fprintf(stdout, "\tjmp\tL%03d\n", lbl1); fprintf(stdout, "L%03d:\n", lbl2); }
                     break;
                 case WHILE:
+                    if (debug) fprintf(stdout, "\t// while loop\n");
                     if (!scanning) { fprintf(stdout, "L%03d:\n", lbl1 = lbl++); }
                     ex(p->opr.op[0], -1, 1, lbl_kept);
                     if (!scanning) { fprintf(stdout, "\tj0\tL%03d\n", lbl2 = lbl++); }
@@ -134,6 +143,7 @@ int ex(nodeType *p, int exType, int nops, ...) {
                     if (!scanning) { fprintf(stdout, "\tjmp\tL%03d\n", lbl1); fprintf(stdout, "L%03d:\n", lbl2); }
                     break;
                 case IF:
+                    if (debug) fprintf(stdout, "\t// if statement\n");
                     ex(p->opr.op[0], -1, 1, lbl_kept);
                     if (p->opr.nops > 2) {
                         if (!scanning) { fprintf(stdout, "\tj0\tL%03d\n", lbl1 = lbl++); }
@@ -154,37 +164,47 @@ int ex(nodeType *p, int exType, int nops, ...) {
                     if (!scanning) { fprintf(stdout, "\tjmp\tL%03d\n", lbl_kept + 1); }
                     break;
                 case GETI:
+                    if (debug) fprintf(stdout, "\t// input geti\n");
                     if (!scanning) { fprintf(stdout, "\tgeti\n"); }
                     if (p->opr.op[0]->type == typeId) {
+                        if (debug) fprintf(stdout, "\t// save to variable %s\n", p->opr.op[0]->id.varName);
                         getRegister(reg, p->opr.op[0]->id.varName, 1);
                         if (!scanning) { fprintf(stdout, "\tpop\t%s\n", reg); }
                     } else if (p->opr.op[0]->type == typeArr) {
+                        if (debug) fprintf(stdout, "\t// save to array %s\n", p->opr.op[0]->arr.name);
                         pushPtr(p->opr.op[0], lbl_kept);
                         if (!scanning) { fprintf(stdout, "\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
                     }
                     break;
-                case GETC: 
+                case GETC:
+                    if (!scanning) fprintf(stdout, "\t// input getc\n");
                     if (!scanning) { fprintf(stdout, "\tgetc\n"); }
                     if (p->opr.op[0]->type == typeId) {
+                        if (!scanning) fprintf(stdout, "\t// save to variable %s\n", p->opr.op[0]->id.varName);
                         getRegister(reg, p->opr.op[0]->id.varName, 1);
                         if (!scanning) { fprintf(stdout, "\tpop\t%s\n", reg); }
                     } else if (p->opr.op[0]->type == typeArr) {
+                        if (!scanning) fprintf(stdout, "\t// save to array %s\n", p->opr.op[0]->arr.name);
                         pushPtr(p->opr.op[0], lbl_kept);
                         if (!scanning) { fprintf(stdout, "\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
                     }
                     break;
                 case GETS:
                     if (!isArrayPtr(p->opr.op[0])) {
+                        if (debug) fprintf(stdout, "\t// input gets\n");
                         if (!scanning) { fprintf(stdout, "\tgets\n"); }
                         if (p->opr.op[0]->type == typeId) {
+                            if (debug) fprintf(stdout, "\t// save to variable %s\n", p->opr.op[0]->id.varName);
                             getRegister(reg, p->opr.op[0]->id.varName, 1);
                             if (!scanning) { fprintf(stdout, "\tpop\t%s\n", reg); }
                         } else if (p->opr.op[0]->type == typeArr) {
+                            if (debug) fprintf(stdout, "\t// save to array %s\n", p->opr.op[0]->arr.name);
                             pushPtr(p->opr.op[0], lbl_kept);
                             if (!scanning) { fprintf(stdout, "\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
                         }
                     } else {
                         // get char array
+                        if (debug) fprintf(stdout, "\t// gets - save to char array\n");
                         getCharArray(p->opr.op[0], lbl_kept);
                     }
                     break;
@@ -229,24 +249,27 @@ int ex(nodeType *p, int exType, int nops, ...) {
                         if (!isArrayPtr(p->opr.op[0]) || p->opr.op[1]->type != typeCon || p->opr.op[1]->con.type != varTypeStr) {
                             if (p->opr.op[0]->type == typeId) {
                                 // variable assignment
+                                if (debug) printf("\t// variable assignment: %s\n", p->opr.op[0]->id.varName);
                                 getRegister(reg, p->opr.op[0]->id.varName, 1);
                                 ex(p->opr.op[1], -1, 1, lbl_kept);
                                 if (!scanning) { fprintf(stdout, "\tpop\t%s\n", reg); }
                             } else if (p->opr.op[0]->type == typeArr) {
                                 // array assignment
-                                if (!scanning) printf("\t// array assignment: %s\n", p->opr.op[0]->arr.name);
+                                if (debug) printf("\t// array assignment: %s\n", p->opr.op[0]->arr.name);
                                 ex(p->opr.op[1], -1, 1, lbl_kept);
                                 pushPtr(p->opr.op[0], lbl_kept);
                                 if (!scanning) { fprintf(stdout, "\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
                             }
                         } else {
                             // char array assignment
+                            if (debug) printf("\t// char array assignment\n");
                             assignCharArray(p->opr.op[0], p->opr.op[1]->con.strValue, lbl_kept);
                         }
                     } else {
                         switch (p->opr.op[0]->opr.oper) {
                             case ARRAY_DECL:
                                 // array declaration and assignment
+                                if (debug) printf("\t// array declaration assignment\n");
                                 ex(p->opr.op[0], -1, 1, lbl_kept);
                                 // calculate expression
                                 ex(p->opr.op[1], -1, 1, lbl_kept);
@@ -254,6 +277,7 @@ int ex(nodeType *p, int exType, int nops, ...) {
                                 break;
                             case DEREF:
                                 // dereference assignment
+                                if (debug) printf("\t// dereference assignment\n");
                                 ex(p->opr.op[1], -1, 1, lbl_kept);
                                 ex(p->opr.op[0]->opr.op[0], -1, 1, lbl_kept);
                                 if (!scanning) { fprintf(stdout, "\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
@@ -328,6 +352,7 @@ int ex(nodeType *p, int exType, int nops, ...) {
             break;
         // functions
         case typeFunc:
+            if (debug) fprintf(stdout, "\t// declare function\n");
             constructFuncFrame(&p->func);
             ex(p->func.stmt, -1, 1, lbl_kept);
             destructFuncFrame(&p->func);
@@ -755,7 +780,7 @@ void pushPtr(nodeType* p, int lbl_kept) {
             // calculate the offset
             if (!scanning) fprintf(stdout, "\tpush\t0\n"); 
             arrOffsetListNodeType *node = p->arr.offsetListHead;
-            ex(node->offset, 1, lbl_kept);
+            ex(node->offset, -1, 1, lbl_kept);
             if (!scanning) fprintf(stdout, "\tadd\n");
         } else {
             pushBasePtr(p);
@@ -763,7 +788,7 @@ void pushPtr(nodeType* p, int lbl_kept) {
             // calculate offset
             if (!scanning) fprintf(stdout, "\tpush\t0\n"); 
             arrOffsetListNodeType *node = p->arr.offsetListHead;
-            ex(node->offset, 1, lbl_kept);
+            ex(node->offset, -1, 1, lbl_kept);
             if (!scanning) fprintf(stdout, "\tadd\n"); 
 
             node = node->next;
@@ -775,7 +800,7 @@ void pushPtr(nodeType* p, int lbl_kept) {
                 while (node) {
                     dim = atoi(strtok(NULL, ","));
                     if (!scanning) { fprintf(stdout, "\tpush\t%d\n", dim); fprintf(stdout, "\tmul\n"); }
-                    ex(node->offset, 1, lbl_kept);
+                    ex(node->offset, -1, 1, lbl_kept);
                     if (!scanning) fprintf(stdout, "\tadd\n"); 
 
                     node = node->next;
@@ -833,6 +858,7 @@ void init() {
     func_sym_tab = (SymTab*) malloc(sizeof(SymTab));
     func_sym_tab->symbol_table = sm_new(FUNC_TAB_SIZE);
     func_sym_tab->arr_dim_sym_tab = sm_new(FUNC_TAB_SIZE);
+    func_sym_tab->size = 0;
 
     // init string table
     string_tab = sm_new(GLOBAL_TAB_SIZE);

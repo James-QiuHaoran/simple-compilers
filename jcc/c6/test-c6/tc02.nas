@@ -125,7 +125,6 @@ L014:
 	push	87
 	add
 	puti
-	// array assignment: a
 	push	sb
 	push	4
 	push	0
@@ -203,4 +202,26 @@ L015:
 	pop	sb[9]
 	jmp	L017
 L016:
+	push	1
+	push	sb
+	push	0
+	push	0
+	push	0
+	add
+	add
+	add
+	pop	ac
+	pop	ac[0]
+	push	"a[0] now is assigned to "
+	puts_
+	push	sb
+	push	0
+	push	0
+	push	0
+	add
+	add
+	add
+	pop	ac
+	push	ac[0]
+	puti
 	end

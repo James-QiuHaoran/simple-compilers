@@ -28,3 +28,4 @@ i = 4
 87 should be equal to 187
 87 should be equal to 187
 87 should be equal to 187
+a[0] now is assigned to 1

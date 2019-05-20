@@ -57,10 +57,9 @@ do
 	cat $i
 	echo ""
 	printf "\n>>>> Result:\n\n"
-
 	if [ "$counter" -eq "17" ]
         then
-                ./nas < test-c6/${i:8:4}.nas > output
+		echo "this is a char array" | ./nas test-c6/${i:8:4}.nas > output
         else
         	./nas test-c6/${i:8:4}.nas > output
 	fi
