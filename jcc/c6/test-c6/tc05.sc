@@ -1,4 +1,4 @@
-// static string: assignment to variable/array element, assignment to pointer (treated as char array), concatination
+// static string
 
 array a[2], b[2][6], c[100];
 

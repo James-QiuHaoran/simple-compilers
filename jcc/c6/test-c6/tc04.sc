@@ -1,4 +1,4 @@
-// array I/O: get, put
+// array I/O:
 
 array a[4][4], b[4][4], c[4][4];
 

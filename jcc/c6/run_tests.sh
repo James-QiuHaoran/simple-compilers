@@ -60,7 +60,10 @@ do
 	if [ "$counter" -eq "17" ]
         then
 		echo "this is a char array" | ./nas test-c6/${i:8:4}.nas > output
-        else
+        elif [ "$counter" -eq "18" ]
+        then
+                echo "4\t\james" | ./nas test-c6/${i:8:4}.nas > output
+	else
         	./nas test-c6/${i:8:4}.nas > output
 	fi
 
