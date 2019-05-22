@@ -24,6 +24,7 @@ In addition, these features have been added to c6:
 - String functioning as other normal variables (assignment, comparison, print);
 - Multi-dimensional arrays;
 - String concatenation;
+- Reference (`*`) & Dereference (`&`);
 
 ## Example programs
 
