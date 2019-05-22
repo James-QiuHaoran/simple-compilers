@@ -46,7 +46,7 @@ char stringVarContent[STR_MAX_LEN]; // a string cannot exceed 1024 chars
 <STR>\\a             { strcat(stringVarContent, "\a"); }
 <STR>\\b             { strcat(stringVarContent, "\b"); }
 
-[-()<>=+*/;{}.%,]    {
+[-()<>=+*/;{}.%,&]   {
                        return *yytext;
                      }
 [\[\]]               {
