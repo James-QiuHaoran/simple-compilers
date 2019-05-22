@@ -23,6 +23,7 @@ In addition, these features have been added to c6:
 - Control flow: `break` and `continue`;
 - String functioning as other normal variables (assignment, comparison, print);
 - Multi-dimensional arrays;
+- String concatenation;
 
 ## Example programs
 

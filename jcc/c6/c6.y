@@ -15,6 +15,7 @@ nodeType *var(long value, varTypeEnum type);
 nodeType *arr(nodeType* id, nodeType *offset);
 nodeType *multiDimensionalizeArray(nodeType *p, nodeType *offset);
 nodeType *func(char* name, nodeType *args, nodeType *stmt);
+nodeType *strConcat(nodeType* str1, nodeType* str2);
 
 /* node management */
 void freeNode(nodeType *p);
@@ -166,6 +167,7 @@ expr:
         | '&' expr %prec REF                               { $$ = opr(REF, 1, $2); }
         | '*' expr %prec DEREF                             { $$ = opr(DEREF, 1, $2); }
         | expr '+' expr                                    { $$ = opr('+', 2, $1, $3); }
+        | STRING '+' STRING                                { $$ = strConcat(var((long) $1, varTypeStr), var((long) $3, varTypeStr)); }
         | expr '-' expr                                    { $$ = opr('-', 2, $1, $3); }
         | expr '*' expr                                    { $$ = opr('*', 2, $1, $3); }
         | expr '%' expr                                    { $$ = opr('%', 2, $1, $3); }
@@ -360,6 +362,28 @@ nodeType *sopr(int oper, int nops, ...) {
 
     // build <str_name, str_content> mappings
     sm_put(string_var_tab, p->opr.op[0]->id.varName, p->opr.op[1]->con.strValue);
+
+    return p;
+}
+
+// concatenate strings
+nodeType* strConcat(nodeType* str1, nodeType* str2) {
+    nodeType *p;
+    size_t nodeSize;
+
+    /* allocate node */
+    nodeSize = SIZEOF_NODETYPE + sizeof(conNodeType);
+    if ((p = malloc(nodeSize)) == NULL)
+        yyerror("out of memory");
+
+    /* copy information */
+    p->type = typeCon;
+    p->con.type = varTypeStr;
+    strcpy(p->con.strValue, strcat(str1->con.strValue, str2->con.strValue));
+
+    /* free two string nodes */
+    freeNode(str1);
+    freeNode(str2);
 
     return p;
 }

@@ -249,6 +249,11 @@ int ex(nodeType *p, int exType, int nops, ...) {
                         if (!isArrayPtr(p->opr.op[0]) || p->opr.op[1]->type != typeCon || p->opr.op[1]->con.type != varTypeStr) {
                             if (p->opr.op[0]->type == typeId) {
                                 // variable assignment
+                                StrMap* arr_dim_sym_tab = getArrDimSymTab();
+                                if (sm_exists(arr_dim_sym_tab, p->opr.op[0]->id.varName)) {
+                                    fprintf(stderr, "Variable cannot have the same name as the array declared [errno: %d]\n", errno);
+                                    exit(1);
+                                }
                                 if (debug) printf("\t// variable assignment: %s\n", p->opr.op[0]->id.varName);
                                 getRegister(reg, p->opr.op[0]->id.varName, 1);
                                 ex(p->opr.op[1], -1, 1, lbl_kept);
