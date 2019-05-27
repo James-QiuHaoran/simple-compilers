@@ -307,8 +307,20 @@ int ex(nodeType *p, int exType, int nops, ...) {
                     break;
                 case CALL:
                     num_args = pushArgsOnStack(p->opr.op[1], lbl_kept);
-                    getLabel(labelName, p->opr.op[0]->id.varName);
-                    if (!scanning) { fprintf(stdout, "\tcall\t%s, %d\n", labelName, num_args); }
+                    int ret = getLabel(labelName, p->opr.op[0]->id.varName);
+                    // error checking
+                    if (ret == -1) {
+                        // function name the same as the variable declared
+                        fprintf(stderr, "Function cannot have the same name as the variable declared [errno: %d]\n", errno);
+                        exit(1);
+                    } else if (ret == 1) {
+                        // function has been declared
+                        if (!scanning) { fprintf(stdout, "\tcall\t%s, %d\n", labelName, num_args); }
+                    } else if (ret != 0){
+                        // unknown functions
+                        fprintf(stderr, "Undeclared functions [errno: %d]\n", errno);
+                        exit(1);
+                    }
                     break;
                 case RETURN:
                     ex(p->opr.op[0], -1, 1, lbl_kept);
@@ -398,7 +410,7 @@ void execute() {
         } else if (ret == 1) {
             // function has been declared
             fprintf(stdout, "%s:\n", label);
-        } else {
+        } else if (ret != 0){
             // unknown functions
             fprintf(stderr, "Undeclared functions [errno: %d]\n", errno);
             exit(1);
@@ -421,6 +433,7 @@ int getLabel(char* label, char* name) {
             return -1;
         }
     } else {
+        // define new functions
         sprintf(label, "L%03d", lbl++);
         sm_put(func_sym_tab->symbol_table, name, label);
         return 0;
