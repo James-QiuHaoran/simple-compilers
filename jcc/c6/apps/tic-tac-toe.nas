@@ -64,13 +64,13 @@
 	pop	ac[24]
 	push	0
 	pop	sb[28]
-L096:
+L060:
 	push	sb[0]
 	push	sb[1]
 	push	sb[1]
 	mul
 	compLT
-	j0	L097
+	j0	L061
 	push	"The "
 	puts_
 	push	sb[0]
@@ -79,40 +79,40 @@ L096:
 	puts
 	push	0
 	pop	sb[29]
-L100:
+L064:
 	push	sb[29]
 	push	sb[1]
 	push	2
 	add
 	compLT
-	j0	L099
+	j0	L063
 	push	'-'
 	putc_
-L098:
+L062:
 	push	sb[29]
 	push	1
 	add
 	pop	sb[29]
-	jmp	L100
-L099:
+	jmp	L064
+L063:
 	push	""
 	puts
 	push	0
 	pop	sb[29]
-L103:
+L067:
 	push	sb[29]
 	push	sb[1]
 	compLT
-	j0	L102
+	j0	L066
 	push	'|'
 	putc_
 	push	0
 	pop	sb[30]
-L106:
+L070:
 	push	sb[30]
 	push	sb[1]
 	compLT
-	j0	L105
+	j0	L069
 	push	sb
 	push	3
 	push	0
@@ -127,50 +127,50 @@ L106:
 	pop	ac
 	push	ac[0]
 	putc_
-L104:
+L068:
 	push	sb[30]
 	push	1
 	add
 	pop	sb[30]
-	jmp	L106
-L105:
+	jmp	L070
+L069:
 	push	"|"
 	puts
-L101:
+L065:
 	push	sb[29]
 	push	1
 	add
 	pop	sb[29]
-	jmp	L103
-L102:
+	jmp	L067
+L066:
 	push	0
 	pop	sb[29]
-L109:
+L073:
 	push	sb[29]
 	push	sb[1]
 	push	2
 	add
 	compLT
-	j0	L108
+	j0	L072
 	push	'-'
 	putc_
-L107:
+L071:
 	push	sb[29]
 	push	1
 	add
 	pop	sb[29]
-	jmp	L109
-L108:
+	jmp	L073
+L072:
 	push	""
 	puts
 	push	1
 	neg
 	pop	sb[31]
-L110:
+L074:
 	push	sb[31]
 	push	0
 	compLT
-	j0	L111
+	j0	L075
 	push	"Player 1 - enter x:"
 	puts
 	geti
@@ -196,14 +196,14 @@ L110:
 	push	0
 	compLT
 	or
-	j0	L112
+	j0	L076
 	push	"Index-x unlawful, plz re-enter!"
 	puts
 	push	1
 	neg
 	pop	sb[31]
-	jmp	L113
-L112:
+	jmp	L077
+L076:
 	push	sb[33]
 	push	sb[1]
 	compGE
@@ -211,14 +211,14 @@ L112:
 	push	0
 	compLT
 	or
-	j0	L114
+	j0	L078
 	push	"Index-y unlawful, plz re-enter!"
 	puts
 	push	1
 	neg
 	pop	sb[31]
-	jmp	L115
-L114:
+	jmp	L079
+L078:
 	push	sb
 	push	3
 	push	0
@@ -234,21 +234,21 @@ L114:
 	push	ac[0]
 	push	' '
 	compNE
-	j0	L116
+	j0	L080
 	push	"Cell occupied, plz re-enter!"
 	puts
 	push	1
 	neg
 	pop	sb[31]
-	jmp	L117
-L116:
+	jmp	L081
+L080:
 	push	1
 	pop	sb[31]
-L117:
-L115:
-L113:
-	jmp	L110
-L111:
+L081:
+L079:
+L077:
+	jmp	L074
+L075:
 	push	'o'
 	push	sb
 	push	3
@@ -284,25 +284,25 @@ L111:
 	push	sb[1]
 	mul
 	compGE
-	j0	L118
-	jmp	L097
-L118:
+	j0	L082
+	jmp	L061
+L082:
 	push	0
 	pop	sb[29]
-L121:
+L085:
 	push	sb[29]
 	push	sb[1]
 	compLT
-	j0	L120
+	j0	L084
 	push	0
 	pop	sb[30]
-L124:
+L088:
 	push	sb[30]
 	push	sb[1]
 	push	2
 	sub
 	compLT
-	j0	L123
+	j0	L087
 	push	sb
 	push	3
 	push	0
@@ -354,50 +354,50 @@ L124:
 	push	'o'
 	compEQ
 	and
-	j0	L125
+	j0	L089
 	push	"test: player 1 won!"
 	puts
 	push	1
 	pop	sb[2]
 	push	1
 	pop	sb[28]
-L125:
-L122:
+L089:
+L086:
 	push	sb[30]
 	push	1
 	add
 	pop	sb[30]
-	jmp	L124
-L123:
-L119:
+	jmp	L088
+L087:
+L083:
 	push	sb[29]
 	push	1
 	add
 	pop	sb[29]
-	jmp	L121
-L120:
+	jmp	L085
+L084:
 	push	sb[28]
 	push	1
 	compEQ
-	j0	L126
-	jmp	L097
-L126:
+	j0	L090
+	jmp	L061
+L090:
 	push	0
 	pop	sb[29]
-L129:
+L093:
 	push	sb[29]
 	push	sb[1]
 	compLT
-	j0	L128
+	j0	L092
 	push	0
 	pop	sb[30]
-L132:
+L096:
 	push	sb[30]
 	push	sb[1]
 	push	2
 	sub
 	compLT
-	j0	L131
+	j0	L095
 	push	sb
 	push	3
 	push	0
@@ -449,50 +449,50 @@ L132:
 	push	'o'
 	compEQ
 	and
-	j0	L133
+	j0	L097
 	push	1
 	pop	sb[2]
 	push	1
 	pop	sb[28]
-L133:
-L130:
+L097:
+L094:
 	push	sb[30]
 	push	1
 	add
 	pop	sb[30]
-	jmp	L132
-L131:
-L127:
+	jmp	L096
+L095:
+L091:
 	push	sb[29]
 	push	1
 	add
 	pop	sb[29]
-	jmp	L129
-L128:
+	jmp	L093
+L092:
 	push	sb[28]
 	push	1
 	compEQ
-	j0	L134
-	jmp	L097
-L134:
+	j0	L098
+	jmp	L061
+L098:
 	push	0
 	pop	sb[29]
-L137:
+L101:
 	push	sb[29]
 	push	sb[1]
 	push	2
 	sub
 	compLT
-	j0	L136
+	j0	L100
 	push	0
 	pop	sb[30]
-L140:
+L104:
 	push	sb[30]
 	push	sb[1]
 	push	2
 	sub
 	compLT
-	j0	L139
+	j0	L103
 	push	sb
 	push	3
 	push	0
@@ -556,7 +556,7 @@ L140:
 	push	ac[0]
 	compEQ
 	and
-	j0	L141
+	j0	L105
 	push	sb
 	push	3
 	push	0
@@ -572,51 +572,51 @@ L140:
 	push	ac[0]
 	push	'o'
 	compEQ
-	j0	L142
+	j0	L106
 	push	1
 	pop	sb[2]
 	push	1
 	pop	sb[28]
-L142:
-L141:
-L138:
+L106:
+L105:
+L102:
 	push	sb[30]
 	push	1
 	add
 	pop	sb[30]
-	jmp	L140
-L139:
-L135:
+	jmp	L104
+L103:
+L099:
 	push	sb[29]
 	push	1
 	add
 	pop	sb[29]
-	jmp	L137
-L136:
+	jmp	L101
+L100:
 	push	sb[28]
 	push	1
 	compEQ
-	j0	L143
-	jmp	L097
-L143:
+	j0	L107
+	jmp	L061
+L107:
 	push	0
 	pop	sb[29]
-L146:
+L110:
 	push	sb[29]
 	push	sb[1]
 	push	2
 	sub
 	compLT
-	j0	L145
+	j0	L109
 	push	sb[1]
 	push	3
 	sub
 	pop	sb[30]
-L149:
+L113:
 	push	sb[30]
 	push	0
 	compGE
-	j0	L148
+	j0	L112
 	push	sb
 	push	3
 	push	0
@@ -680,7 +680,7 @@ L149:
 	push	ac[0]
 	compEQ
 	and
-	j0	L150
+	j0	L114
 	push	sb
 	push	3
 	push	0
@@ -696,41 +696,41 @@ L149:
 	push	ac[0]
 	push	'o'
 	compEQ
-	j0	L151
+	j0	L115
 	push	1
 	pop	sb[2]
 	push	1
 	pop	sb[28]
-L151:
-L150:
-L147:
+L115:
+L114:
+L111:
 	push	sb[30]
 	push	1
 	sub
 	pop	sb[30]
-	jmp	L149
-L148:
-L144:
+	jmp	L113
+L112:
+L108:
 	push	sb[29]
 	push	1
 	add
 	pop	sb[29]
-	jmp	L146
-L145:
+	jmp	L110
+L109:
 	push	sb[28]
 	push	1
 	compEQ
-	j0	L152
-	jmp	L097
-L152:
+	j0	L116
+	jmp	L061
+L116:
 	push	1
 	neg
 	pop	sb[31]
-L153:
+L117:
 	push	sb[31]
 	push	0
 	compLT
-	j0	L154
+	j0	L118
 	push	"Player 2 - enter x:"
 	puts
 	geti
@@ -756,14 +756,14 @@ L153:
 	push	0
 	compLT
 	or
-	j0	L155
+	j0	L119
 	push	"Index-x unlawful, plz re-enter!"
 	puts
 	push	1
 	neg
 	pop	sb[31]
-	jmp	L156
-L155:
+	jmp	L120
+L119:
 	push	sb[35]
 	push	sb[1]
 	compGE
@@ -771,14 +771,14 @@ L155:
 	push	0
 	compLT
 	or
-	j0	L157
+	j0	L121
 	push	"Index-y unlawful, plz re-enter!"
 	puts
 	push	1
 	neg
 	pop	sb[31]
-	jmp	L158
-L157:
+	jmp	L122
+L121:
 	push	sb
 	push	3
 	push	0
@@ -794,21 +794,21 @@ L157:
 	push	ac[0]
 	push	' '
 	compNE
-	j0	L159
+	j0	L123
 	push	"Cell occupied, plz re-enter!"
 	puts
 	push	1
 	neg
 	pop	sb[31]
-	jmp	L160
-L159:
+	jmp	L124
+L123:
 	push	1
 	pop	sb[31]
-L160:
-L158:
-L156:
-	jmp	L153
-L154:
+L124:
+L122:
+L120:
+	jmp	L117
+L118:
 	push	'*'
 	push	sb
 	push	3
@@ -844,25 +844,25 @@ L154:
 	push	sb[1]
 	mul
 	compGE
-	j0	L161
-	jmp	L097
-L161:
+	j0	L125
+	jmp	L061
+L125:
 	push	0
 	pop	sb[29]
-L164:
+L128:
 	push	sb[29]
 	push	sb[1]
 	compLT
-	j0	L163
+	j0	L127
 	push	0
 	pop	sb[30]
-L167:
+L131:
 	push	sb[30]
 	push	sb[1]
 	push	2
 	sub
 	compLT
-	j0	L166
+	j0	L130
 	push	sb
 	push	3
 	push	0
@@ -922,7 +922,7 @@ L167:
 	push	ac[0]
 	compEQ
 	and
-	j0	L168
+	j0	L132
 	push	sb
 	push	3
 	push	0
@@ -938,49 +938,49 @@ L167:
 	push	ac[0]
 	push	'*'
 	compEQ
-	j0	L169
+	j0	L133
 	push	2
 	pop	sb[2]
 	push	1
 	pop	sb[28]
-L169:
-L168:
-L165:
+L133:
+L132:
+L129:
 	push	sb[30]
 	push	1
 	add
 	pop	sb[30]
-	jmp	L167
-L166:
-L162:
+	jmp	L131
+L130:
+L126:
 	push	sb[29]
 	push	1
 	add
 	pop	sb[29]
-	jmp	L164
-L163:
+	jmp	L128
+L127:
 	push	sb[28]
 	push	1
 	compEQ
-	j0	L170
-	jmp	L097
-L170:
+	j0	L134
+	jmp	L061
+L134:
 	push	0
 	pop	sb[29]
-L173:
+L137:
 	push	sb[29]
 	push	sb[1]
 	compLT
-	j0	L172
+	j0	L136
 	push	0
 	pop	sb[30]
-L176:
+L140:
 	push	sb[30]
 	push	sb[1]
 	push	2
 	sub
 	compLT
-	j0	L175
+	j0	L139
 	push	sb
 	push	3
 	push	0
@@ -1040,7 +1040,7 @@ L176:
 	push	ac[0]
 	compEQ
 	and
-	j0	L177
+	j0	L141
 	push	sb
 	push	3
 	push	0
@@ -1056,51 +1056,51 @@ L176:
 	push	ac[0]
 	push	'*'
 	compEQ
-	j0	L178
+	j0	L142
 	push	2
 	pop	sb[2]
 	push	1
 	pop	sb[28]
-L178:
-L177:
-L174:
+L142:
+L141:
+L138:
 	push	sb[30]
 	push	1
 	add
 	pop	sb[30]
-	jmp	L176
-L175:
-L171:
+	jmp	L140
+L139:
+L135:
 	push	sb[29]
 	push	1
 	add
 	pop	sb[29]
-	jmp	L173
-L172:
+	jmp	L137
+L136:
 	push	sb[28]
 	push	1
 	compEQ
-	j0	L179
-	jmp	L097
-L179:
+	j0	L143
+	jmp	L061
+L143:
 	push	0
 	pop	sb[29]
-L182:
+L146:
 	push	sb[29]
 	push	sb[1]
 	push	2
 	sub
 	compLT
-	j0	L181
+	j0	L145
 	push	0
 	pop	sb[30]
-L185:
+L149:
 	push	sb[30]
 	push	sb[1]
 	push	2
 	sub
 	compLT
-	j0	L184
+	j0	L148
 	push	sb
 	push	3
 	push	0
@@ -1164,7 +1164,7 @@ L185:
 	push	ac[0]
 	compEQ
 	and
-	j0	L186
+	j0	L150
 	push	sb
 	push	3
 	push	0
@@ -1180,51 +1180,51 @@ L185:
 	push	ac[0]
 	push	'*'
 	compEQ
-	j0	L187
+	j0	L151
 	push	2
 	pop	sb[2]
 	push	1
 	pop	sb[28]
-L187:
-L186:
-L183:
+L151:
+L150:
+L147:
 	push	sb[30]
 	push	1
 	add
 	pop	sb[30]
-	jmp	L185
-L184:
-L180:
+	jmp	L149
+L148:
+L144:
 	push	sb[29]
 	push	1
 	add
 	pop	sb[29]
-	jmp	L182
-L181:
+	jmp	L146
+L145:
 	push	sb[28]
 	push	1
 	compEQ
-	j0	L188
-	jmp	L097
-L188:
+	j0	L152
+	jmp	L061
+L152:
 	push	0
 	pop	sb[29]
-L191:
+L155:
 	push	sb[29]
 	push	sb[1]
 	push	2
 	sub
 	compLT
-	j0	L190
+	j0	L154
 	push	sb[1]
 	push	3
 	sub
 	pop	sb[30]
-L194:
+L158:
 	push	sb[30]
 	push	0
 	compGE
-	j0	L193
+	j0	L157
 	push	sb
 	push	3
 	push	0
@@ -1288,7 +1288,7 @@ L194:
 	push	ac[0]
 	compEQ
 	and
-	j0	L195
+	j0	L159
 	push	sb
 	push	3
 	push	0
@@ -1304,583 +1304,60 @@ L194:
 	push	ac[0]
 	push	'*'
 	compEQ
-	j0	L196
+	j0	L160
 	push	2
 	pop	sb[2]
 	push	1
 	pop	sb[28]
-L196:
-L195:
-L192:
+L160:
+L159:
+L156:
 	push	sb[30]
 	push	1
 	sub
 	pop	sb[30]
-	jmp	L194
-L193:
-L189:
+	jmp	L158
+L157:
+L153:
 	push	sb[29]
 	push	1
 	add
 	pop	sb[29]
-	jmp	L191
-L190:
+	jmp	L155
+L154:
 	push	sb[28]
 	push	1
 	compEQ
-	j0	L197
-	jmp	L097
-L197:
-	jmp	L096
-L097:
+	j0	L161
+	jmp	L061
+L161:
+	jmp	L060
+L061:
 	push	sb[0]
 	push	sb[1]
 	push	sb[1]
 	mul
 	compEQ
-	j0	L198
+	j0	L162
 	push	"No one won!"
 	puts
-	jmp	L199
-L198:
+	jmp	L163
+L162:
 	push	sb[2]
 	push	1
 	compEQ
-	j0	L200
+	j0	L164
 	push	"Player 1 won!"
 	puts
-	jmp	L201
-L200:
+	jmp	L165
+L164:
 	push	sb[2]
 	push	2
 	compEQ
-	j0	L202
+	j0	L166
 	push	"Player 2 won!"
 	puts
-L202:
-L201:
-L199:
+L166:
+L165:
+L163:
 	end
-	push	0
-	pop	sb[29]
-L206:
-	push	sb[29]
-	push	sb[1]
-	push	2
-	add
-	compLT
-	j0	L205
-	push	'-'
-	putc_
-L204:
-	push	sb[29]
-	push	1
-	add
-	pop	sb[29]
-	jmp	L206
-L205:
-	push	""
-	puts
-	push	0
-	pop	sb[29]
-L209:
-	push	sb[29]
-	push	sb[1]
-	compLT
-	j0	L208
-	push	'|'
-	putc_
-	push	0
-	pop	sb[30]
-L212:
-	push	sb[30]
-	push	sb[1]
-	compLT
-	j0	L211
-	push	fp[-4]
-	push	0
-	push	sb[29]
-	add
-	add
-	pop	ac
-	push	ac[0]
-	putc_
-L210:
-	push	sb[30]
-	push	1
-	add
-	pop	sb[30]
-	jmp	L212
-L211:
-	push	"|"
-	puts
-L207:
-	push	sb[29]
-	push	1
-	add
-	pop	sb[29]
-	jmp	L209
-L208:
-	push	0
-	pop	sb[29]
-L215:
-	push	sb[29]
-	push	sb[1]
-	push	2
-	add
-	compLT
-	j0	L214
-	push	'-'
-	putc_
-L213:
-	push	sb[29]
-	push	1
-	add
-	pop	sb[29]
-	jmp	L215
-L214:
-	push	""
-	puts
-	ret
-	push	fp[-5]
-	push	sb[1]
-	compGE
-	push	fp[-5]
-	push	0
-	compLT
-	or
-	j0	L217
-	push	"Index-x unlawful, plz re-enter!"
-	puts
-	push	1
-	neg
-	ret
-	jmp	L218
-L217:
-	push	fp[-4]
-	push	sb[1]
-	compGE
-	push	fp[-4]
-	push	0
-	compLT
-	or
-	j0	L219
-	push	"Index-y unlawful, plz re-enter!"
-	puts
-	push	1
-	neg
-	ret
-	jmp	L220
-L219:
-	push	sb
-	push	3
-	push	0
-	push	fp[-5]
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	' '
-	compNE
-	j0	L221
-	push	"Cell occupied, plz re-enter!"
-	puts
-	push	1
-	neg
-	ret
-	jmp	L222
-L221:
-	push	1
-	ret
-L222:
-L220:
-L218:
-	ret
-	push	0
-	pop	sb[29]
-L226:
-	push	sb[29]
-	push	sb[1]
-	compLT
-	j0	L225
-	push	0
-	pop	sb[30]
-L229:
-	push	sb[30]
-	push	sb[1]
-	push	2
-	sub
-	compLT
-	j0	L228
-	push	fp[-4]
-	push	0
-	push	sb[29]
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	fp[-4]
-	push	0
-	push	sb[29]
-	add
-	add
-	pop	ac
-	push	ac[0]
-	compEQ
-	push	fp[-4]
-	push	0
-	push	sb[29]
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	fp[-4]
-	push	0
-	push	sb[29]
-	add
-	add
-	pop	ac
-	push	ac[0]
-	compEQ
-	and
-	j0	L230
-	push	fp[-4]
-	push	0
-	push	sb[29]
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	'o'
-	compEQ
-	j0	L231
-	push	1
-	ret
-	jmp	L232
-L231:
-	push	fp[-4]
-	push	0
-	push	sb[29]
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	'*'
-	compEQ
-	j0	L233
-	push	1
-	neg
-	ret
-L233:
-L232:
-L230:
-L227:
-	push	sb[30]
-	push	1
-	add
-	pop	sb[30]
-	jmp	L229
-L228:
-L224:
-	push	sb[29]
-	push	1
-	add
-	pop	sb[29]
-	jmp	L226
-L225:
-	push	0
-	pop	sb[29]
-L236:
-	push	sb[29]
-	push	sb[1]
-	compLT
-	j0	L235
-	push	0
-	pop	sb[30]
-L239:
-	push	sb[30]
-	push	sb[1]
-	push	2
-	sub
-	compLT
-	j0	L238
-	push	fp[-4]
-	push	0
-	push	sb[30]
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	fp[-4]
-	push	0
-	push	sb[30]
-	push	1
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	compEQ
-	push	fp[-4]
-	push	0
-	push	sb[30]
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	fp[-4]
-	push	0
-	push	sb[30]
-	push	2
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	compEQ
-	and
-	j0	L240
-	push	fp[-4]
-	push	0
-	push	sb[30]
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	'o'
-	compEQ
-	j0	L241
-	push	1
-	ret
-	jmp	L242
-L241:
-	push	fp[-4]
-	push	0
-	push	sb[30]
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	'*'
-	compEQ
-	j0	L243
-	push	1
-	neg
-	ret
-L243:
-L242:
-L240:
-L237:
-	push	sb[30]
-	push	1
-	add
-	pop	sb[30]
-	jmp	L239
-L238:
-L234:
-	push	sb[29]
-	push	1
-	add
-	pop	sb[29]
-	jmp	L236
-L235:
-	push	0
-	pop	sb[29]
-L246:
-	push	sb[29]
-	push	sb[1]
-	push	2
-	sub
-	compLT
-	j0	L245
-	push	0
-	pop	sb[30]
-L249:
-	push	sb[30]
-	push	sb[1]
-	push	2
-	sub
-	compLT
-	j0	L248
-	push	fp[-4]
-	push	0
-	push	sb[29]
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	fp[-4]
-	push	0
-	push	sb[29]
-	push	1
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	compEQ
-	push	fp[-4]
-	push	0
-	push	sb[29]
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	fp[-4]
-	push	0
-	push	sb[29]
-	push	2
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	compEQ
-	and
-	j0	L250
-	push	fp[-4]
-	push	0
-	push	sb[29]
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	'o'
-	compEQ
-	j0	L251
-	push	1
-	ret
-	jmp	L252
-L251:
-	push	fp[-4]
-	push	0
-	push	sb[29]
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	'*'
-	compEQ
-	j0	L253
-	push	1
-	neg
-	ret
-L253:
-L252:
-L250:
-L247:
-	push	sb[30]
-	push	1
-	add
-	pop	sb[30]
-	jmp	L249
-L248:
-L244:
-	push	sb[29]
-	push	1
-	add
-	pop	sb[29]
-	jmp	L246
-L245:
-	push	0
-	pop	sb[29]
-L256:
-	push	sb[29]
-	push	sb[1]
-	push	2
-	sub
-	compLT
-	j0	L255
-	push	sb[1]
-	push	3
-	sub
-	pop	sb[30]
-L259:
-	push	sb[30]
-	push	0
-	compGE
-	j0	L258
-	push	fp[-4]
-	push	0
-	push	sb[29]
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	fp[-4]
-	push	0
-	push	sb[29]
-	push	1
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	compEQ
-	push	fp[-4]
-	push	0
-	push	sb[29]
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	fp[-4]
-	push	0
-	push	sb[29]
-	push	2
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	compEQ
-	and
-	j0	L260
-	push	fp[-4]
-	push	0
-	push	sb[29]
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	'o'
-	compEQ
-	j0	L261
-	push	1
-	ret
-	jmp	L262
-L261:
-	push	fp[-4]
-	push	0
-	push	sb[29]
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	'*'
-	compEQ
-	j0	L263
-	push	1
-	neg
-	ret
-L263:
-L262:
-L260:
-L257:
-	push	sb[30]
-	push	1
-	sub
-	pop	sb[30]
-	jmp	L259
-L258:
-L254:
-	push	sb[29]
-	push	1
-	add
-	pop	sb[29]
-	jmp	L256
-L255:
-	push	0
-	ret
-	ret

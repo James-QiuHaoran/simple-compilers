@@ -1,98 +1,13 @@
-counter = 0;
-size = 5;
-winner = 0;
+counter = 0;             // number of steps
+size = 5;                // board size
+winner = 0;              // winner 
 array board[5][5] = ' '; // 5*5 board
-
-printBoard(b) {
-    for (i = 0; i < size+2; i = i + 1;) {
-        putc_('-');
-    }
-    puts("");
-    for (i = 0; i < size; i = i + 1;) {
-        putc_('|');
-        for (j = 0; j < size; j = j + 1;) {
-            putc_(b[i][j]);
-        }
-        puts("|");
-    }
-    for (i = 0; i < size+2; i = i + 1;) {
-        putc_('-');
-    }
-    puts("");
-}
-
-check(x, y) {
-    if (x >= size || x < 0) {
-        puts("Index-x unlawful, plz re-enter!");
-        return -1;
-    } else if (y >= size || y < 0) {
-        puts("Index-y unlawful, plz re-enter!");
-        return -1;
-    } else if (board[x][y] != ' ') {
-        puts("Cell occupied, plz re-enter!");
-        return -1;
-    } else {
-        return 1;
-    }
-}
-
-checkEnding(b) {
-    // check horizontally
-    for (i = 0; i < size; i = i + 1;) {
-        for (j = 0; j < size - 2; j = j + 1;) {
-            if (b[i][j] == b[i][j+1] && b[i][j] == b[i][j+2]) {
-                if (b[i][j] == 'o')
-                    return 1;
-                else if (b[i][j] == '*')
-                    return -1;
-            }
-        }
-    }
-
-    // check vertically
-    for (i = 0; i < size; i = i + 1;) {
-        for (j = 0; j < size - 2; j = j + 1;) {
-            if (b[j][i] == b[j+1][i] && b[j][i] == b[j+2][i]) {
-                if (b[j][i] == 'o')
-                    return 1;
-                else if (b[j][i] == '*')
-                    return -1;
-            }
-        }
-    }
-
-    // check diagonal
-    for (i = 0; i < size-2; i = i + 1;) {
-        for (j = 0; j < size-2; j = j + 1;) {
-            if (b[i][j] == b[i+1][j+1] && b[i][j] == b[i+2][j+2]) {
-                if (b[i][j] == 'o')
-                    return 1;
-                else if (b[i][j] == '*')
-                    return -1;
-            }
-        }
-    }
-    for (i = 0; i < size-2; i = i + 1;) {
-        for (j = size-3; j >= 0; j = j - 1;) {
-            if (b[i][j] == b[i+1][j-1] && b[i][j] == b[i+2][j-2]) {
-                if (b[i][j] == 'o')
-                    return 1;
-                else if (b[i][j] == '*')
-                    return -1;
-            }
-        }
-    }
-
-    // not yet finished
-    return 0;
-}
 
 end = 0;
 while (counter < size*size) {
     puts_("The "); puti_(counter); puts("-th round:");
 
     // print the board
-    // printBoard(board);
     for (i = 0; i < size+2; i = i + 1;) { putc_('-'); }
     puts("");
     for (i = 0; i < size; i = i + 1;) {
@@ -113,7 +28,6 @@ while (counter < size*size) {
         puts("Player 1 - enter y:");
         geti(y1);
         puts_("Player 1: ("); puti_(x1); puts_(", "); puti_(y1); puts(")");
-        // ret = check(x1, y1);
         if (x1 >= size || x1 < 0) {
             puts("Index-x unlawful, plz re-enter!");
             ret = -1;
@@ -133,14 +47,6 @@ while (counter < size*size) {
     // check end
     counter = counter + 1;
     if (counter >= size*size) { break; }
-    // ret = checkEnding(board);
-    // if (ret == 1) {
-    //    winner = 1;
-    //    break;
-    // } else if (ret == -1) {
-    //    winner = 2;
-    //    break;
-    // }
     // check horizontally
     for (i = 0; i < size; i = i + 1;) {
         for (j = 0; j < size - 2; j = j + 1;) {
@@ -192,7 +98,6 @@ while (counter < size*size) {
         puts("Player 2 - enter y:");
         geti(y2);
         puts_("Player 2: ("); puti_(x2); puts_(", "); puti_(y2); puts(")");
-        // ret = check(x2, y2);
         if (x2 >= size || x2 < 0) {
             puts("Index-x unlawful, plz re-enter!");
             ret = -1;
@@ -212,14 +117,6 @@ while (counter < size*size) {
     // check end
     counter = counter + 1;
     if (counter >= size*size) { break; }
-    // ret = checkEnding(board);
-    // if (ret == 1) {
-    //    winner = 1;
-    //    break;
-    // } else if (ret == -1) {
-    //    winner = 2;
-    //    break;
-    // }
     // check horizontally
     for (i = 0; i < size; i = i + 1;) {
         for (j = 0; j < size - 2; j = j + 1;) {
