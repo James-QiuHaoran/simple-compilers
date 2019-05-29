@@ -506,6 +506,8 @@ L104:
 	add
 	pop	ac
 	push	ac[0]
+	push	'o'
+	compEQ
 	push	sb
 	push	3
 	push	0
@@ -518,53 +520,6 @@ L104:
 	push	sb[30]
 	push	1
 	add
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	compEQ
-	push	sb
-	push	3
-	push	0
-	push	sb[29]
-	add
-	push	5
-	mul
-	push	sb[30]
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	sb
-	push	3
-	push	0
-	push	sb[29]
-	push	2
-	add
-	add
-	push	5
-	mul
-	push	sb[30]
-	push	2
-	add
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	compEQ
-	and
-	j0	L105
-	push	sb
-	push	3
-	push	0
-	push	sb[29]
-	add
-	push	5
-	mul
-	push	sb[30]
 	add
 	add
 	add
@@ -572,12 +527,32 @@ L104:
 	push	ac[0]
 	push	'o'
 	compEQ
-	j0	L106
+	and
+	push	sb
+	push	3
+	push	0
+	push	sb[29]
+	push	2
+	add
+	add
+	push	5
+	mul
+	push	sb[30]
+	push	2
+	add
+	add
+	add
+	add
+	pop	ac
+	push	ac[0]
+	push	'o'
+	compEQ
+	and
+	j0	L105
 	push	1
 	pop	sb[2]
 	push	1
 	pop	sb[28]
-L106:
 L105:
 L102:
 	push	sb[30]
@@ -596,91 +571,27 @@ L100:
 	push	sb[28]
 	push	1
 	compEQ
-	j0	L107
+	j0	L106
 	jmp	L061
-L107:
+L106:
 	push	0
 	pop	sb[29]
-L110:
+L109:
 	push	sb[29]
 	push	sb[1]
 	push	2
 	sub
 	compLT
-	j0	L109
+	j0	L108
 	push	sb[1]
 	push	3
 	sub
 	pop	sb[30]
-L113:
+L112:
 	push	sb[30]
 	push	0
 	compGE
-	j0	L112
-	push	sb
-	push	3
-	push	0
-	push	sb[29]
-	add
-	push	5
-	mul
-	push	sb[30]
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	sb
-	push	3
-	push	0
-	push	sb[29]
-	push	1
-	add
-	add
-	push	5
-	mul
-	push	sb[30]
-	push	1
-	sub
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	compEQ
-	push	sb
-	push	3
-	push	0
-	push	sb[29]
-	add
-	push	5
-	mul
-	push	sb[30]
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	sb
-	push	3
-	push	0
-	push	sb[29]
-	push	2
-	add
-	add
-	push	5
-	mul
-	push	sb[30]
-	push	2
-	sub
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	compEQ
-	and
-	j0	L114
+	j0	L111
 	push	sb
 	push	3
 	push	0
@@ -696,41 +607,80 @@ L113:
 	push	ac[0]
 	push	'o'
 	compEQ
-	j0	L115
+	push	sb
+	push	3
+	push	0
+	push	sb[29]
+	push	1
+	add
+	add
+	push	5
+	mul
+	push	sb[30]
+	push	1
+	sub
+	add
+	add
+	add
+	pop	ac
+	push	ac[0]
+	push	'o'
+	compEQ
+	and
+	push	sb
+	push	3
+	push	0
+	push	sb[29]
+	push	2
+	add
+	add
+	push	5
+	mul
+	push	sb[30]
+	push	2
+	sub
+	add
+	add
+	add
+	pop	ac
+	push	ac[0]
+	push	'o'
+	compEQ
+	and
+	j0	L113
 	push	1
 	pop	sb[2]
 	push	1
 	pop	sb[28]
-L115:
-L114:
-L111:
+L113:
+L110:
 	push	sb[30]
 	push	1
 	sub
 	pop	sb[30]
-	jmp	L113
-L112:
-L108:
+	jmp	L112
+L111:
+L107:
 	push	sb[29]
 	push	1
 	add
 	pop	sb[29]
-	jmp	L110
-L109:
+	jmp	L109
+L108:
 	push	sb[28]
 	push	1
 	compEQ
-	j0	L116
+	j0	L114
 	jmp	L061
-L116:
+L114:
 	push	1
 	neg
 	pop	sb[31]
-L117:
+L115:
 	push	sb[31]
 	push	0
 	compLT
-	j0	L118
+	j0	L116
 	push	"Player 2 - enter x:"
 	puts
 	geti
@@ -756,14 +706,14 @@ L117:
 	push	0
 	compLT
 	or
-	j0	L119
+	j0	L117
 	push	"Index-x unlawful, plz re-enter!"
 	puts
 	push	1
 	neg
 	pop	sb[31]
-	jmp	L120
-L119:
+	jmp	L118
+L117:
 	push	sb[35]
 	push	sb[1]
 	compGE
@@ -771,14 +721,14 @@ L119:
 	push	0
 	compLT
 	or
-	j0	L121
+	j0	L119
 	push	"Index-y unlawful, plz re-enter!"
 	puts
 	push	1
 	neg
 	pop	sb[31]
-	jmp	L122
-L121:
+	jmp	L120
+L119:
 	push	sb
 	push	3
 	push	0
@@ -794,21 +744,21 @@ L121:
 	push	ac[0]
 	push	' '
 	compNE
-	j0	L123
+	j0	L121
 	push	"Cell occupied, plz re-enter!"
 	puts
 	push	1
 	neg
 	pop	sb[31]
-	jmp	L124
-L123:
+	jmp	L122
+L121:
 	push	1
 	pop	sb[31]
-L124:
 L122:
 L120:
-	jmp	L117
 L118:
+	jmp	L115
+L116:
 	push	'*'
 	push	sb
 	push	3
@@ -844,203 +794,118 @@ L118:
 	push	sb[1]
 	mul
 	compGE
-	j0	L125
+	j0	L123
 	jmp	L061
-L125:
+L123:
 	push	0
 	pop	sb[29]
-L128:
-	push	sb[29]
-	push	sb[1]
-	compLT
-	j0	L127
-	push	0
-	pop	sb[30]
-L131:
-	push	sb[30]
-	push	sb[1]
-	push	2
-	sub
-	compLT
-	j0	L130
-	push	sb
-	push	3
-	push	0
-	push	sb[29]
-	add
-	push	5
-	mul
-	push	sb[30]
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	sb
-	push	3
-	push	0
-	push	sb[29]
-	add
-	push	5
-	mul
-	push	sb[30]
-	push	1
-	add
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	compEQ
-	push	sb
-	push	3
-	push	0
-	push	sb[29]
-	add
-	push	5
-	mul
-	push	sb[30]
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	sb
-	push	3
-	push	0
-	push	sb[29]
-	add
-	push	5
-	mul
-	push	sb[30]
-	push	2
-	add
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	compEQ
-	and
-	j0	L132
-	push	sb
-	push	3
-	push	0
-	push	sb[29]
-	add
-	push	5
-	mul
-	push	sb[30]
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	'*'
-	compEQ
-	j0	L133
-	push	2
-	pop	sb[2]
-	push	1
-	pop	sb[28]
-L133:
-L132:
-L129:
-	push	sb[30]
-	push	1
-	add
-	pop	sb[30]
-	jmp	L131
-L130:
 L126:
 	push	sb[29]
+	push	sb[1]
+	compLT
+	j0	L125
+	push	0
+	pop	sb[30]
+L129:
+	push	sb[30]
+	push	sb[1]
+	push	2
+	sub
+	compLT
+	j0	L128
+	push	sb
+	push	3
+	push	0
+	push	sb[29]
+	add
+	push	5
+	mul
+	push	sb[30]
+	add
+	add
+	add
+	pop	ac
+	push	ac[0]
+	push	'*'
+	compEQ
+	push	sb
+	push	3
+	push	0
+	push	sb[29]
+	add
+	push	5
+	mul
+	push	sb[30]
+	push	1
+	add
+	add
+	add
+	add
+	pop	ac
+	push	ac[0]
+	push	'*'
+	compEQ
+	and
+	push	sb
+	push	3
+	push	0
+	push	sb[29]
+	add
+	push	5
+	mul
+	push	sb[30]
+	push	2
+	add
+	add
+	add
+	add
+	pop	ac
+	push	ac[0]
+	push	'*'
+	compEQ
+	and
+	j0	L130
+	push	2
+	pop	sb[2]
+	push	1
+	pop	sb[28]
+L130:
+L127:
+	push	sb[30]
+	push	1
+	add
+	pop	sb[30]
+	jmp	L129
+L128:
+L124:
+	push	sb[29]
 	push	1
 	add
 	pop	sb[29]
-	jmp	L128
-L127:
+	jmp	L126
+L125:
 	push	sb[28]
 	push	1
 	compEQ
-	j0	L134
+	j0	L131
 	jmp	L061
-L134:
+L131:
 	push	0
 	pop	sb[29]
-L137:
+L134:
 	push	sb[29]
 	push	sb[1]
+	compLT
+	j0	L133
+	push	0
+	pop	sb[30]
+L137:
+	push	sb[30]
+	push	sb[1]
+	push	2
+	sub
 	compLT
 	j0	L136
-	push	0
-	pop	sb[30]
-L140:
-	push	sb[30]
-	push	sb[1]
-	push	2
-	sub
-	compLT
-	j0	L139
-	push	sb
-	push	3
-	push	0
-	push	sb[30]
-	add
-	push	5
-	mul
-	push	sb[29]
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	sb
-	push	3
-	push	0
-	push	sb[30]
-	push	1
-	add
-	add
-	push	5
-	mul
-	push	sb[29]
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	compEQ
-	push	sb
-	push	3
-	push	0
-	push	sb[30]
-	add
-	push	5
-	mul
-	push	sb[29]
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	sb
-	push	3
-	push	0
-	push	sb[30]
-	push	2
-	add
-	add
-	push	5
-	mul
-	push	sb[29]
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	compEQ
-	and
-	j0	L141
 	push	sb
 	push	3
 	push	0
@@ -1056,115 +921,86 @@ L140:
 	push	ac[0]
 	push	'*'
 	compEQ
-	j0	L142
+	push	sb
+	push	3
+	push	0
+	push	sb[30]
+	push	1
+	add
+	add
+	push	5
+	mul
+	push	sb[29]
+	add
+	add
+	add
+	pop	ac
+	push	ac[0]
+	push	'*'
+	compEQ
+	and
+	push	sb
+	push	3
+	push	0
+	push	sb[30]
+	push	2
+	add
+	add
+	push	5
+	mul
+	push	sb[29]
+	add
+	add
+	add
+	pop	ac
+	push	ac[0]
+	push	'*'
+	compEQ
+	and
+	j0	L138
 	push	2
 	pop	sb[2]
 	push	1
 	pop	sb[28]
-L142:
-L141:
 L138:
+L135:
 	push	sb[30]
 	push	1
 	add
 	pop	sb[30]
-	jmp	L140
-L139:
-L135:
-	push	sb[29]
-	push	1
-	add
-	pop	sb[29]
 	jmp	L137
 L136:
+L132:
+	push	sb[29]
+	push	1
+	add
+	pop	sb[29]
+	jmp	L134
+L133:
 	push	sb[28]
 	push	1
 	compEQ
-	j0	L143
+	j0	L139
 	jmp	L061
-L143:
+L139:
 	push	0
 	pop	sb[29]
-L146:
+L142:
 	push	sb[29]
 	push	sb[1]
 	push	2
 	sub
 	compLT
-	j0	L145
+	j0	L141
 	push	0
 	pop	sb[30]
-L149:
+L145:
 	push	sb[30]
 	push	sb[1]
 	push	2
 	sub
 	compLT
-	j0	L148
-	push	sb
-	push	3
-	push	0
-	push	sb[29]
-	add
-	push	5
-	mul
-	push	sb[30]
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	sb
-	push	3
-	push	0
-	push	sb[29]
-	push	1
-	add
-	add
-	push	5
-	mul
-	push	sb[30]
-	push	1
-	add
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	compEQ
-	push	sb
-	push	3
-	push	0
-	push	sb[29]
-	add
-	push	5
-	mul
-	push	sb[30]
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	sb
-	push	3
-	push	0
-	push	sb[29]
-	push	2
-	add
-	add
-	push	5
-	mul
-	push	sb[30]
-	push	2
-	add
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	compEQ
-	and
-	j0	L150
+	j0	L144
 	push	sb
 	push	3
 	push	0
@@ -1180,115 +1016,90 @@ L149:
 	push	ac[0]
 	push	'*'
 	compEQ
-	j0	L151
+	push	sb
+	push	3
+	push	0
+	push	sb[29]
+	push	1
+	add
+	add
+	push	5
+	mul
+	push	sb[30]
+	push	1
+	add
+	add
+	add
+	add
+	pop	ac
+	push	ac[0]
+	push	'*'
+	compEQ
+	and
+	push	sb
+	push	3
+	push	0
+	push	sb[29]
+	push	2
+	add
+	add
+	push	5
+	mul
+	push	sb[30]
+	push	2
+	add
+	add
+	add
+	add
+	pop	ac
+	push	ac[0]
+	push	'*'
+	compEQ
+	and
+	j0	L146
 	push	2
 	pop	sb[2]
 	push	1
 	pop	sb[28]
-L151:
-L150:
-L147:
+L146:
+L143:
 	push	sb[30]
 	push	1
 	add
 	pop	sb[30]
-	jmp	L149
-L148:
+	jmp	L145
 L144:
+L140:
 	push	sb[29]
 	push	1
 	add
 	pop	sb[29]
-	jmp	L146
-L145:
+	jmp	L142
+L141:
 	push	sb[28]
 	push	1
 	compEQ
-	j0	L152
+	j0	L147
 	jmp	L061
-L152:
+L147:
 	push	0
 	pop	sb[29]
-L155:
+L150:
 	push	sb[29]
 	push	sb[1]
 	push	2
 	sub
 	compLT
-	j0	L154
+	j0	L149
 	push	sb[1]
 	push	3
 	sub
 	pop	sb[30]
-L158:
+L153:
 	push	sb[30]
 	push	0
 	compGE
-	j0	L157
-	push	sb
-	push	3
-	push	0
-	push	sb[29]
-	add
-	push	5
-	mul
-	push	sb[30]
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	sb
-	push	3
-	push	0
-	push	sb[29]
-	push	1
-	add
-	add
-	push	5
-	mul
-	push	sb[30]
-	push	1
-	sub
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	compEQ
-	push	sb
-	push	3
-	push	0
-	push	sb[29]
-	add
-	push	5
-	mul
-	push	sb[30]
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	push	sb
-	push	3
-	push	0
-	push	sb[29]
-	push	2
-	add
-	add
-	push	5
-	mul
-	push	sb[30]
-	push	2
-	sub
-	add
-	add
-	add
-	pop	ac
-	push	ac[0]
-	compEQ
-	and
-	j0	L159
+	j0	L152
 	push	sb
 	push	3
 	push	0
@@ -1304,33 +1115,72 @@ L158:
 	push	ac[0]
 	push	'*'
 	compEQ
-	j0	L160
+	push	sb
+	push	3
+	push	0
+	push	sb[29]
+	push	1
+	add
+	add
+	push	5
+	mul
+	push	sb[30]
+	push	1
+	sub
+	add
+	add
+	add
+	pop	ac
+	push	ac[0]
+	push	'*'
+	compEQ
+	and
+	push	sb
+	push	3
+	push	0
+	push	sb[29]
+	push	2
+	add
+	add
+	push	5
+	mul
+	push	sb[30]
+	push	2
+	sub
+	add
+	add
+	add
+	pop	ac
+	push	ac[0]
+	push	'*'
+	compEQ
+	and
+	j0	L154
 	push	2
 	pop	sb[2]
 	push	1
 	pop	sb[28]
-L160:
-L159:
-L156:
+L154:
+L151:
 	push	sb[30]
 	push	1
 	sub
 	pop	sb[30]
-	jmp	L158
-L157:
-L153:
+	jmp	L153
+L152:
+L148:
 	push	sb[29]
 	push	1
 	add
 	pop	sb[29]
-	jmp	L155
-L154:
+	jmp	L150
+L149:
 	push	sb[28]
 	push	1
 	compEQ
-	j0	L161
+	j0	L155
 	jmp	L061
-L161:
+L155:
 	jmp	L060
 L061:
 	push	sb[0]
@@ -1338,26 +1188,26 @@ L061:
 	push	sb[1]
 	mul
 	compEQ
-	j0	L162
+	j0	L156
 	push	"No one won!"
 	puts
-	jmp	L163
-L162:
+	jmp	L157
+L156:
 	push	sb[2]
 	push	1
 	compEQ
-	j0	L164
+	j0	L158
 	push	"Player 1 won!"
 	puts
-	jmp	L165
-L164:
+	jmp	L159
+L158:
 	push	sb[2]
 	push	2
 	compEQ
-	j0	L166
+	j0	L160
 	push	"Player 2 won!"
 	puts
-L166:
-L165:
-L163:
+L160:
+L159:
+L157:
 	end

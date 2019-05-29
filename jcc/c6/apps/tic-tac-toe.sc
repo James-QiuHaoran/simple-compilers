@@ -71,20 +71,16 @@ while (counter < size*size) {
     // check diagonal
     for (i = 0; i < size-2; i = i + 1;) {
         for (j = 0; j < size-2; j = j + 1;) {
-            if (board[i][j] == board[i+1][j+1] && board[i][j] == board[i+2][j+2]) {
-                if (board[i][j] == 'o') {
-                    winner = 1; end = 1;
-                }
+            if (board[i][j] == 'o' && board[i+1][j+1] == 'o' && board[i+2][j+2] == 'o') {
+                winner = 1; end = 1;
             }
         }
     }
     if (end == 1) { break; }
     for (i = 0; i < size-2; i = i + 1;) {
         for (j = size-3; j >= 0; j = j - 1;) {
-            if (board[i][j] == board[i+1][j-1] && board[i][j] == board[i+2][j-2]) {
-                if (board[i][j] == 'o') {
-                    winner = 1; end = 1;
-                }
+            if (board[i][j] == 'o' && board[i+1][j-1] == 'o' && board[i+2][j-2] == 'o') {
+                winner = 1; end = 1;
             }
         }
     }
@@ -120,11 +116,8 @@ while (counter < size*size) {
     // check horizontally
     for (i = 0; i < size; i = i + 1;) {
         for (j = 0; j < size - 2; j = j + 1;) {
-            if (board[i][j] == board[i][j+1] && board[i][j] == board[i][j+2]) {
-                if (board[i][j] == '*') {
-                    winner = 2;
-                    end = 1;
-                }
+            if (board[i][j] == '*' && board[i][j+1] == '*' && board[i][j+2] == '*') {
+                winner = 2; end = 1;
             }
         }
     }
@@ -133,11 +126,8 @@ while (counter < size*size) {
     // check vertically
     for (i = 0; i < size; i = i + 1;) {
         for (j = 0; j < size - 2; j = j + 1;) {
-            if (board[j][i] == board[j+1][i] && board[j][i] == board[j+2][i]) {
-                if (board[j][i] == '*') {
-                    winner = 2;
-                    end = 1;
-                }
+            if (board[j][i] == '*' && board[j+1][i] == '*' && board[j+2][i] == '*') {
+                winner = 2; end = 1;
             }
         }
     }
@@ -146,22 +136,16 @@ while (counter < size*size) {
     // check diagonal
     for (i = 0; i < size-2; i = i + 1;) {
         for (j = 0; j < size-2; j = j + 1;) {
-            if (board[i][j] == board[i+1][j+1] && board[i][j] == board[i+2][j+2]) {
-                if (board[i][j] == '*') {
-                    winner = 2;
-                    end = 1;
-                }
+            if (board[i][j] == '*' && board[i+1][j+1] == '*' && board[i+2][j+2] == '*') {
+                winner = 2; end = 1;
             } 
         } 
     }
     if (end == 1) { break; }
     for (i = 0; i < size-2; i = i + 1;) {
         for (j = size-3; j >= 0; j = j - 1;) {
-            if (board[i][j] == board[i+1][j-1] && board[i][j] == board[i+2][j-2]) {
-                if (board[i][j] == '*') {
-                    winner = 2;
-                    end = 1;
-                }
+            if (board[i][j] == '*' && board[i+1][j-1] == '*' && board[i+2][j-2] == '*') {
+                winner = 2; end = 1;
             }
         }
     }
