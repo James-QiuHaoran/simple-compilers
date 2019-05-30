@@ -34,6 +34,10 @@ There are three sample programs in the directory `sample_progs`:
 - rev-c.sc - string-reverse
 - max.sc - picking the max from two numbers
 
+## Applications
+
+There is currently one app - Tic-Tac-Toe, written in c6 language. It's under the `apps` directory.
+
 ## To run the compiler
 
 ```
