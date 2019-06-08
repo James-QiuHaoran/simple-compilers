@@ -250,7 +250,7 @@ int main(int argc, char *argv[]) {
       case JMP:
 		i = lb[(long)op[i]]; break;
       case GETI:
-		scanf("%ld", (long *) &st[SP]);
+		scanf("%lf", &st[SP]);
 		getchar(); // chew up the newline
 		i++; ISP; break;
 	  case GETF:
