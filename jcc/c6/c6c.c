@@ -69,6 +69,10 @@ int ex(nodeType *p, int exType, int nops, ...) {
                     // integer
                     if (!scanning) fprintf(stdout, "\tpush\t%d\n", p->con.value); 
                     break;
+                case varTypeFloat:
+                    // float number
+                    if (!scanning) fprintf(stdout, "\tpush\t%f\n", p->con.fValue);
+                    break;
                 case varTypeChar:
                     // char
                     if (!scanning) fprintf(stdout, "\tpush\t\'%c\'\n", (char) p->con.value); 
@@ -208,6 +212,19 @@ int ex(nodeType *p, int exType, int nops, ...) {
                         getCharArray(p->opr.op[0], lbl_kept);
                     }
                     break;
+                case GETF:
+                    if (debug) fprintf(stdout, "\t// input getf\n");
+                    if (!scanning) { fprintf(stdout, "\tgetf\n"); }
+                    if (p->opr.op[0]->type == typeId) {
+                        if (debug) fprintf(stdout, "\t// save to variable %s\n", p->opr.op[0]->id.varName);
+                        getRegister(reg, p->opr.op[0]->id.varName, 1);
+                        if (!scanning) { fprintf(stdout, "\tpop\t%s\n", reg); }
+                    } else if (p->opr.op[0]->type == typeArr) {
+                        if (debug) fprintf(stdout, "\t// save to array %s\n", p->opr.op[0]->arr.name);
+                        pushPtr(p->opr.op[0], lbl_kept);
+                        if (!scanning) { fprintf(stdout, "\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
+                    }
+                    break;
                 case PUTI: 
                     ex(p->opr.op[0], -1, 1, lbl_kept);
                     if (!scanning) { fprintf(stdout, "\tputi\n"); }
@@ -215,6 +232,14 @@ int ex(nodeType *p, int exType, int nops, ...) {
                 case PUTI_:
                     ex(p->opr.op[0], -1, 1, lbl_kept);
                     if (!scanning) { fprintf(stdout, "\tputi_\n"); }
+                    break;
+                case PUTF:
+                    ex(p->opr.op[0], -1, 1, lbl_kept);
+                    if (!scanning) { fprintf(stdout, "\tputf\n"); }
+                    break;
+                case PUTF_:
+                    ex(p->opr.op[0], -1, 1, lbl_kept);
+                    if (!scanning) { fprintf(stdout, "\tputf_\n"); }
                     break;
                 case PUTC: 
                     ex(p->opr.op[0], -1, 1, lbl_kept);
@@ -356,6 +381,7 @@ int ex(nodeType *p, int exType, int nops, ...) {
                         case '-': if (!scanning) fprintf(stdout, "\tsub\n"); break; 
                         case '*': if (!scanning) fprintf(stdout, "\tmul\n"); break;
                         case '/': if (!scanning) fprintf(stdout, "\tdiv\n"); break;
+                        case RDIV: if (!scanning) fprintf(stdout, "\trdiv\n"); break;
                         case '%': if (!scanning) fprintf(stdout, "\tmod\n"); break;
                         case '<': if (!scanning) fprintf(stdout, "\tcompLT\n"); break;
                         case '>': if (!scanning) fprintf(stdout, "\tcompGT\n"); break;

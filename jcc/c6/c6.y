@@ -12,6 +12,7 @@ nodeType *opr(int oper, int nops, ...);
 nodeType *sopr(int oper, int nops, ...);
 nodeType *nameToNode(char* name);
 nodeType *var(long value, varTypeEnum type);
+nodeType *fVar(double value, varTypeEnum type);
 nodeType *arr(nodeType* id, nodeType *offset);
 nodeType *multiDimensionalizeArray(nodeType *p, nodeType *offset);
 nodeType *func(char* name, nodeType *args, nodeType *stmt);
@@ -47,15 +48,17 @@ nodeLinkedListType* stmts;
 
 %union {
     int intValue;               /* integer value (int | char) */
+    double floatValue;          /* float number */
     char strValue[STR_MAX_LEN]; /* const value (string) */
     char sIndex[VAR_NAME_LEN];  /* symbol table index */
     nodeType *nPtr;             /* node pointer */
 };
 
 %token <intValue> INTEGER CHAR
+%token <floatValue> FLOAT
 %token <strValue> STRING
 %token <sIndex> LEFT_VARIABLE RIGHT_VARIABLE
-%token FOR WHILE IF RETURN CALL GETI GETC GETS PUTI PUTC PUTS PUTI_ PUTC_ PUTS_
+%token FOR WHILE IF RETURN CALL GETI GETC GETS GETF PUTI PUTC PUTS PUTF PUTI_ PUTC_ PUTS_ PUTF_
 %token CONTINUE BREAK
 %token ARRAY_DECL
 %nonassoc IFX
@@ -64,7 +67,7 @@ nodeLinkedListType* stmts;
 %left AND OR
 %left GE LE EQ NE '>' '<'
 %left '+' '-'
-%left '*' '/' '%'
+%left '*' '/' RDIV '%'
 %nonassoc UMINUS REF DEREF
 
 %type <nPtr> stmt expr stmt_list func params param variable args arg array assignment assignment_list arr_decl_list left_var arr_list
@@ -117,12 +120,15 @@ stmt:
         | GETI '(' left_var ')' ';'                        { $$ = opr(GETI, 1, $3); }
         | GETC '(' left_var ')' ';'                        { $$ = opr(GETC, 1, $3); }
         | GETS '(' left_var ')' ';'                        { $$ = opr(GETS, 1, $3); }
+        | GETF '(' left_var ')' ';'                        { $$ = opr(GETF, 1, $3); }
         | PUTI '(' arg ')' ';'                             { $$ = opr(PUTI, 1, $3); }
         | PUTI_ '(' arg ')' ';'                            { $$ = opr(PUTI_, 1, $3); }
         | PUTC '(' arg ')' ';'                             { $$ = opr(PUTC, 1, $3); }
         | PUTC_ '(' arg ')' ';'                            { $$ = opr(PUTC_, 1, $3); }
         | PUTS '(' arg ')' ';'                             { $$ = opr(PUTS, 1, $3); }
         | PUTS_ '(' arg ')' ';'                            { $$ = opr(PUTS_, 1, $3); }
+        | PUTF '(' arg ')' ';'                             { $$ = opr(PUTF, 1, $3); }
+        | PUTF_ '(' arg ')' ';'                            { $$ = opr(PUTF_, 1, $3); }
         | assignment_list ';'                              { $$ = $1; }
         | FOR '(' stmt stmt stmt ')' stmt                  { $$ = opr(FOR, 4, $3, $4, $5, $7); }
         | WHILE '(' expr ')' stmt                          { $$ = opr(WHILE, 2, $3, $5); }
@@ -160,6 +166,7 @@ args:
 
 expr:
           INTEGER                                          { $$ = var($1, varTypeInt); }
+        | FLOAT                                            { $$ = fVar($1, varTypeFloat); }
         | CHAR                                             { $$ = var($1, varTypeChar); }
         | variable                                         { $$ = $1; }
         | array                                            { $$ = $1; }
@@ -172,6 +179,7 @@ expr:
         | expr '*' expr                                    { $$ = opr('*', 2, $1, $3); }
         | expr '%' expr                                    { $$ = opr('%', 2, $1, $3); }
         | expr '/' expr                                    { $$ = opr('/', 2, $1, $3); }
+        | expr RDIV expr                                   { $$ = opr(RDIV, 2, $1, $3); }
         | expr '<' expr                                    { $$ = opr('<', 2, $1, $3); }
         | expr '>' expr                                    { $$ = opr('>', 2, $1, $3); }
         | expr GE expr                                     { $$ = opr(GE, 2, $1, $3); }
@@ -236,6 +244,23 @@ nodeType *var(long value, varTypeEnum type) {
     } else {
         p->con.value = (int) value;
     }
+
+    return p;
+}
+
+nodeType *fVar(double value, varTypeEnum type) {
+    nodeType *p;
+    size_t nodeSize;
+
+    /* allocate node */
+    nodeSize = SIZEOF_NODETYPE + sizeof(conNodeType);
+    if ((p = malloc(nodeSize)) == NULL)
+        yyerror("out of memory");
+
+    /* copy information */
+    p->type = typeCon;
+    p->con.type = type;
+    p->con.fValue = value;
 
     return p;
 }

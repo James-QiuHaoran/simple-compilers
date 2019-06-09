@@ -13,12 +13,13 @@
 #define STR_HASH_LEN 4
 
 typedef enum { typeCon, typeId, typeArr, typeOpr, typeFunc } nodeEnum;
-typedef enum { varTypeInt, varTypeChar, varTypeStr, varTypeNil } varTypeEnum;
+typedef enum { varTypeInt, varTypeFloat, varTypeChar, varTypeStr, varTypeNil } varTypeEnum;
 typedef enum { typeFuncList, typeStmtList } listTypeEnum;
 
 /* constants */
 typedef struct conNodeType {
     int value;                  /* value of constant */
+    double fValue;
     char strValue[STR_MAX_LEN]; /* string value, max 1024 chars*/
     int strValueHash;           /* hash value for the string content */
     varTypeEnum type;

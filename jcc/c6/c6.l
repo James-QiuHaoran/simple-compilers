@@ -23,6 +23,10 @@ char stringVarContent[STR_MAX_LEN]; // a string cannot exceed 1024 chars
                        yylval.intValue = (long) atoi(yytext);
                        return INTEGER;
                      }
+-?[0-9]+\.[0-9]+     {
+                       yylval.floatValue = atof(yytext);
+                       return FLOAT;
+                     }
 
 ''                   { yylval.intValue = 0; return CHAR; }
 '\\n'                { yylval.intValue = (int) '\n'; return CHAR; }
@@ -57,6 +61,7 @@ char stringVarContent[STR_MAX_LEN]; // a string cannot exceed 1024 chars
 "<="                   return LE;
 "=="                   return EQ;
 "!="                   return NE;
+"div"                  return RDIV;
 "for"                  return FOR;
 "while"                return WHILE;
 "break"                return BREAK;
@@ -66,12 +71,15 @@ char stringVarContent[STR_MAX_LEN]; // a string cannot exceed 1024 chars
 "geti"                 return GETI;
 "getc"                 return GETC;
 "gets"                 return GETS;
+"getf"                 return GETF;
 "puti"                 return PUTI;
 "putc"                 return PUTC;
 "puts"                 return PUTS;
+"putf"                 return PUTF;
 "puti_"                return PUTI_;
 "putc_"                return PUTC_;
 "puts_"                return PUTS_;
+"putf_"                return PUTF_;
 "&&"                   return AND;
 "||"                   return OR;
 "return"               return RETURN;
