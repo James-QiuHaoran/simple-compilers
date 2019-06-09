@@ -63,6 +63,9 @@ do
         elif [ "$counter" -eq "18" ]
         then
                 echo "4\t\james" | ./nas test-c6/${i:8:4}.nas > output
+	elif [ "$counter" -eq "23" ]
+	then
+		echo "3.45" | ./nas test-c6/${i:8:4}.nas > output
 	else
         	./nas test-c6/${i:8:4}.nas > output
 	fi
