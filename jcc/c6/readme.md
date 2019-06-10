@@ -25,7 +25,7 @@ In addition, these features have been added to c6:
 - Multi-dimensional arrays (any dimension);
 - String concatenation;
 - Reference (`*`) & Dereference (`&`);
-- Floating numbers (TODO);
+- Floating numbers;
 - Struct (TODO);
 
 ## Example programs
@@ -51,7 +51,7 @@ Run `make clean` to remove all intermediate or auxiliary files.
 
 ## Tests
 
-There are 25 tests in the `test` directory. To run them, simply execute `./run_tests.sh`. But make sure you've built the executables `c6c` and `nas`.
+There are 26 tests in the `test` directory. To run them, simply execute `./run_tests.sh`. But make sure you've built the executables `c6c` and `nas`.
 
 ## Contact
 
