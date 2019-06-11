@@ -32,7 +32,6 @@ void destructFuncFrame(funcNodeType* func);
 void mvSPRegPtr(int offset);
 
 int isArrayPtr(nodeType* p);
-StrMap* getArrDimSymTab();
 void declareArray(char* reg, arrNodeType* array, int lbl_kept);
 void putCharArray(nodeType* p, int hasNewLine, int lbl_kept);
 void getCharArray(nodeType* p, int lbl_kept);
@@ -41,6 +40,11 @@ void assignArray(nodeType* p);
 void pushPtrValue(nodeType* p, int lbl_kept);
 void pushPtr(nodeType* p, int lbl_kept);
 void pushBasePtr(nodeType* p);
+StrMap* getArrDimSymTab();
+
+int pushStructMembers(nodeType* memberList, char* name);
+void defineStruct(structNodeType* strct);
+void declareStruct(char* regName, nodeType* p, int lbl_kept);
 
 /* function definitions */
 // execution of AST on each node
@@ -120,6 +124,10 @@ int ex(nodeType *p, int exType, int nops, ...) {
                 if (debug) fprintf(stdout, "\t// push array %s\n", p->arr.name);
                 pushPtrValue(p, lbl_kept);
             }
+            break;
+        // structs
+        case typeStruct:
+            if (scanning) defineStruct(&p->strct);
             break;
         // operators
         case typeOpr:
@@ -357,6 +365,12 @@ int ex(nodeType *p, int exType, int nops, ...) {
                 case ',':
                     ex(p->opr.op[0], -1, 1, lbl_kept);
                     ex(p->opr.op[1], -1, 1, lbl_kept);
+                    break;
+                case STRUCT_DECL:
+                    if (scanning) declareStruct(reg, p, lbl_kept);
+                    break;
+                case '.':
+                    if (!scanning) fprintf(stdout, "dot operation\n");
                     break;
                 case EQ:
                     if (p->opr.op[1]->type == typeCon && p->opr.op[1]->con.type == varTypeStr ||
@@ -892,6 +906,62 @@ void pushBasePtr(nodeType* p) {
     if (!scanning) { fprintf(stdout, "\tpush\t%s\n", baseReg); fprintf(stdout, "\tpush\t%s\n", baseRegOffset); }
 }
 
+// return number of members in a struct
+int pushStructMembers(nodeType* memberList, char* name) {
+    if (memberList == NULL) return 0;
+
+    if (memberList->type != typeOpr || memberList->opr.oper != ',') {
+        // store to symbol table
+        char keyName[strlen(name) + strlen(memberList->id.varName) + 2];
+        sprintf(keyName, "%s.%s", name, memberList->id.varName);
+        sm_put(struct_sym_tab->symbol_table, keyName, "0");
+        return 1;
+    }
+
+    int num_members = pushStructMembers(memberList->opr.op[0], name);
+
+    // store to symbol table
+    char keyName[strlen(name) + strlen(memberList->opr.op[1]->id.varName) + 2];
+    char value[STRUCT_MEMBER_SIZE];
+    sprintf(keyName, "%s.%s", name, memberList->opr.op[1]->id.varName);
+    sprintf(value, "%d", num_members); 
+    sm_put(struct_sym_tab->symbol_table, keyName, value);  
+
+    return 1 + num_members;
+}
+
+// struct definition
+void defineStruct(structNodeType* strct) {
+    // insert struct member info into symbol table
+    nodeType* memberList = strct->memberList;
+    int num_members = pushStructMembers(strct->memberList, strct->structName);
+
+    // store number of members info into symbol table
+    char value[STRUCT_MEMBER_SIZE];
+    sprintf(value, "%d", num_members); 
+    sm_put(struct_sym_tab->symbol_table, strct->structName, value);
+
+    // store meta data
+    strct->num_members = num_members;
+    struct_sym_tab->size += num_members + 1;
+    assert(sm_get_count(struct_sym_tab->symbol_table) == struct_sym_tab->size);
+}
+
+// struct declaration
+void declareStruct(char* regName, nodeType* p, int lbl_kept) {
+    // get struct size
+    char sizeBuffer[STRUCT_MEMBER_SIZE];
+    sm_get(struct_sym_tab->symbol_table, p->opr.op[0]->id.varName, sizeBuffer, STRUCT_MEMBER_SIZE);
+    int size = atoi(sizeBuffer);
+
+    // declare
+    getRegister(regName, p->opr.op[1]->id.varName, size);
+
+    // key: var name, value: struct type name
+    sm_put(struct_sym_tab->symbol_table, p->opr.op[1]->id.varName, p->opr.op[0]->id.varName);
+    struct_sym_tab->size++;
+}
+
 // program initialization for execution
 void init() {
     // init symbol tables
@@ -903,6 +973,9 @@ void init() {
     func_sym_tab->symbol_table = sm_new(FUNC_TAB_SIZE);
     func_sym_tab->arr_dim_sym_tab = sm_new(FUNC_TAB_SIZE);
     func_sym_tab->size = 0;
+    struct_sym_tab = (SymTab*) malloc(sizeof(SymTab));
+    struct_sym_tab->symbol_table = sm_new(STRUCT_TAB_SIZE);
+    struct_sym_tab->size = 0;
 
     // init string table
     string_tab = sm_new(GLOBAL_TAB_SIZE);
@@ -922,6 +995,11 @@ void init() {
     stmts->type = typeStmtList; 
     stmts->num_nodes = 0; 
     stmts->head = stmts->tail = NULL;
+
+    structs = malloc(sizeof(nodeLinkedListType)); 
+    structs->type = typeStructList; 
+    structs->num_nodes = 0; 
+    structs->head = structs->tail = NULL;
 }
 
 // terminate and wrap up
@@ -931,6 +1009,7 @@ void end() {
     sm_delete(func_sym_tab->symbol_table);
     sm_delete(global_sym_tab->arr_dim_sym_tab);
     sm_delete(func_sym_tab->arr_dim_sym_tab);
+    sm_delete(struct_sym_tab->symbol_table);
 
     // delete string table
     sm_delete(string_tab);
@@ -940,6 +1019,7 @@ void end() {
     free(local_sym_tab);
     free(global_sym_tab);
     free(func_sym_tab);
+    free(struct_sym_tab);
 
     // free the node lists for functions
     nodeInListType *trash = funcs->head;
@@ -965,12 +1045,25 @@ void end() {
 
     free(stmts);
 
+    // free the node lists for structs
+    trash = structs->head;
+
+    while (trash) {
+        freeNode(trash->node);
+        structs->head = trash->next;
+        free(trash);
+        trash = structs->head;
+    }
+
+    free(structs);
+
     // exit
     exit(0);
 }
 
 // start to compile: scanning
 void start() {
+    scan(structs);
     scan(stmts);
     scan(funcs);
 

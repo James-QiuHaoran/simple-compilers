@@ -5,16 +5,18 @@
 #define VAR_NAME_LEN 14
 #define STR_MAX_LEN 1024
 #define DIM_STR_LEN 128
+#define STR_HASH_LEN 4
 
 #define GLOBAL_TAB_SIZE 256
 #define LOCAL_TAB_SIZE 256
 #define FUNC_TAB_SIZE 256
+#define STRUCT_TAB_SIZE 256
 
-#define STR_HASH_LEN 4
+#define STRUCT_MEMBER_SIZE 128
 
-typedef enum { typeCon, typeId, typeArr, typeOpr, typeFunc } nodeEnum;
+typedef enum { typeCon, typeId, typeArr, typeOpr, typeFunc, typeStruct } nodeEnum;
 typedef enum { varTypeInt, varTypeFloat, varTypeChar, varTypeStr, varTypeNil } varTypeEnum;
-typedef enum { typeFuncList, typeStmtList } listTypeEnum;
+typedef enum { typeFuncList, typeStmtList, typeStructList } listTypeEnum;
 
 /* constants */
 typedef struct conNodeType {
@@ -52,6 +54,13 @@ typedef struct arrOffsetListNodeType {
     struct arrOffsetListNodeType *next;
 } arrOffsetListNodeType;
 
+/* struct */
+typedef struct structNodeType {
+    char structName[VAR_NAME_LEN];
+    struct nodeType *memberList;
+    int num_members;
+} structNodeType;
+
 /* functions */
 typedef struct funcNodeType {
     char name[VAR_NAME_LEN];
@@ -87,6 +96,7 @@ typedef struct nodeType {
         arrNodeType arr;        /* arrays */
         oprNodeType opr;        /* operators */
         funcNodeType func;      /* functions*/
+        structNodeType strct;   /* struct */
     };
 } nodeType;
 
@@ -110,11 +120,13 @@ typedef struct SymTab {
 extern SymTab* global_sym_tab;
 extern SymTab* func_sym_tab;
 extern StackSym* local_sym_tab;
+extern SymTab* struct_sym_tab;
 
 /* strings */
 extern StrMap* string_tab;
 extern StrMap* string_var_tab;
 
-/* stack list (functions and statements) */
+/* stack list (functions, statements and structs) */
 extern nodeLinkedListType* funcs;
 extern nodeLinkedListType* stmts;
+extern nodeLinkedListType* structs;

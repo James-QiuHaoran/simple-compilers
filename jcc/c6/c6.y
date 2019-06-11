@@ -14,6 +14,7 @@ nodeType *nameToNode(char* name);
 nodeType *var(long value, varTypeEnum type);
 nodeType *fVar(double value, varTypeEnum type);
 nodeType *arr(nodeType* id, nodeType *offset);
+nodeType *strct(char * name, nodeType *members);
 nodeType *multiDimensionalizeArray(nodeType *p, nodeType *offset);
 nodeType *func(char* name, nodeType *args, nodeType *stmt);
 nodeType *strConcat(nodeType* str1, nodeType* str2);
@@ -40,9 +41,11 @@ StackSym* local_sym_tab;        /* local varaible symbol table */
 SymTab* func_sym_tab;           /* global function symbol table */
 StrMap* string_tab;             /* string table */
 StrMap* string_var_tab;         /* string variable table */
+SymTab* struct_sym_tab;         /* symbol tables for struct */
 
 nodeLinkedListType* funcs;   
 nodeLinkedListType* stmts;
+nodeLinkedListType* structs;
 
 %}
 
@@ -60,7 +63,7 @@ nodeLinkedListType* stmts;
 %token <sIndex> LEFT_VARIABLE RIGHT_VARIABLE
 %token FOR WHILE IF RETURN CALL GETI GETC GETS GETF PUTI PUTC PUTS PUTF PUTI_ PUTC_ PUTS_ PUTF_
 %token CONTINUE BREAK
-%token ARRAY_DECL
+%token ARRAY_DECL STRUCT_DECL
 %nonassoc IFX
 %nonassoc ELSE
 
@@ -70,7 +73,7 @@ nodeLinkedListType* stmts;
 %left '*' '/' RDIV '%'
 %nonassoc UMINUS REF DEREF
 
-%type <nPtr> stmt expr stmt_list func params param variable args arg array assignment assignment_list arr_decl_list left_var arr_list
+%type <nPtr> stmt expr stmt_list func params param variable args arg array assignment assignment_list arr_decl_list left_var arr_list struct_def struct struct_decl_list
 
 %%
 
@@ -81,11 +84,19 @@ program:
 main_func:  
           main_func stmt                                   { addNode(stmts, $2); }
         | main_func func                                   { addNode(funcs, $2); }
+        | main_func struct_def                             { addNode(structs, $2); }
         | /* NULL */
         ;
 
 func:
           LEFT_VARIABLE '(' params ')' '{' stmt_list '}'   { $$ = func($1, $3, $6); }
+        ;
+
+struct_def:
+          STRUCT_DECL RIGHT_VARIABLE '{' params '}' ';'    { $$ = strct($2, $4); }
+
+struct:
+          variable '.' variable                            { $$ = opr('.', 2, $1, $3); }
         ;
 
 params:
@@ -107,6 +118,7 @@ left_var:
           variable                                         { $$ = $1; }
         | array                                            { $$ = $1; }
         | '*' expr %prec DEREF                             { $$ = opr(DEREF, 1, $2); }
+        | struct                                           { $$ = $1; }
         ;
 
 stmt_list:
@@ -141,6 +153,7 @@ stmt:
         | RETURN STRING ';'                                { $$ = opr(RETURN, 1, var((long) $2, varTypeStr)); }
         | '{' stmt_list '}'                                { $$ = $2; }
         | arr_decl_list ';'                                { $$ = $1; }
+        | struct_decl_list ';'                             { $$ = $1; }
         ;
 
 assignment:
@@ -170,6 +183,7 @@ expr:
         | CHAR                                             { $$ = var($1, varTypeChar); }
         | variable                                         { $$ = $1; }
         | array                                            { $$ = $1; }
+        | struct                                           { $$ = $1; }
         | '-' expr %prec UMINUS                            { $$ = opr(UMINUS, 1, $2); }
         | '&' expr %prec REF                               { $$ = opr(REF, 1, $2); }
         | '*' expr %prec DEREF                             { $$ = opr(DEREF, 1, $2); }
@@ -209,6 +223,27 @@ array:
 arr_list:
           variable '[' expr                                { $$ = arr($1, $3); }
         | arr_list ']' '[' expr                            { $$ = multiDimensionalizeArray($1, $4); }
+        ;
+
+struct_decl_list:
+          '<' variable '>' variable                        { $$ = opr(STRUCT_DECL, 2, $2, $4); }
+        | '<' variable '>' array                           { $$ = opr(STRUCT_DECL, 2, $2, $4); }
+        | struct_decl_list ',' variable                    { 
+                                                             if ($1->opr.op[0]->type == typeId) {
+                                                                 // the second element
+                                                                 $$ = opr(',', 2, $1, opr(STRUCT_DECL, 2, nameToNode($1->opr.op[0]->id.varName), $3)); 
+                                                             } else {
+                                                                 $$ = opr(',', 2, $1, opr(STRUCT_DECL, 2, nameToNode($1->opr.op[1]->opr.op[0]->id.varName), $3)); 
+                                                             }
+                                                           }
+        | struct_decl_list ',' array                       { 
+                                                             if ($1->opr.op[0]->type == typeId) {
+                                                                 // the second element
+                                                                 $$ = opr(',', 2, $1, opr(STRUCT_DECL, 2, nameToNode($1->opr.op[0]->id.varName), $3)); 
+                                                             } else {
+                                                                 $$ = opr(',', 2, $1, opr(STRUCT_DECL, 2, nameToNode($1->opr.op[1]->opr.op[0]->id.varName), $3)); 
+                                                             }
+                                                           }
         ;
 
 %%
@@ -284,6 +319,24 @@ nodeType *arr(nodeType* id, nodeType *offset) {
     p->arr.offsetListHead->next = NULL;
     p->arr.offsetListTail = p->arr.offsetListHead;
     p->arr.dimension = 1;
+
+    return p;
+}
+
+nodeType *strct(char * name, nodeType *members) {
+    nodeType *p;
+    size_t nodeSize;
+
+    /* allocate node */
+    nodeSize = SIZEOF_NODETYPE + sizeof(structNodeType);
+    if ((p = malloc(nodeSize)) == NULL)
+        yyerror("out of memory");
+
+    /* copy information */
+    p->type = typeStruct;
+    strcpy(p->strct.structName, name);
+    p->strct.memberList = members;
+    p->strct.num_members = 0;
 
     return p;
 }

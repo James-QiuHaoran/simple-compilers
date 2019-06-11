@@ -84,6 +84,7 @@ char stringVarContent[STR_MAX_LEN]; // a string cannot exceed 1024 chars
 "||"                   return OR;
 "return"               return RETURN;
 "array"                return ARRAY_DECL;
+"struct"               return STRUCT_DECL;
 
 ^[a-z]+[a-zA-Z0-9]*  { 
                        /* case insensitive */
