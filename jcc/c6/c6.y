@@ -71,7 +71,7 @@ nodeLinkedListType* structs;
 %left GE LE EQ NE '>' '<'
 %left '+' '-'
 %left '*' '/' RDIV '%'
-%nonassoc UMINUS REF DEREF
+%nonassoc UMINUS REF DEREF DOT
 
 %type <nPtr> stmt expr stmt_list func params param variable args arg array assignment assignment_list arr_decl_list left_var arr_list struct_def struct struct_decl_list
 
@@ -96,7 +96,8 @@ struct_def:
           STRUCT_DECL RIGHT_VARIABLE '{' params '}' ';'    { $$ = strct($2, $4); }
 
 struct:
-          variable '.' variable                            { $$ = opr('.', 2, $1, $3); }
+          variable '.' variable                            { $$ = opr(DOT, 2, $1, $3); }
+        | array '.' variable                               { $$ = opr(DOT, 2, $1, $3); }
         ;
 
 params:

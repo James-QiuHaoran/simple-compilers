@@ -32,7 +32,7 @@ void destructFuncFrame(funcNodeType* func);
 void mvSPRegPtr(int offset);
 
 int isArrayPtr(nodeType* p);
-void declareArray(char* reg, arrNodeType* array, int lbl_kept);
+void declareArray(char* reg, arrNodeType* array, int size, int lbl_kept);
 void putCharArray(nodeType* p, int hasNewLine, int lbl_kept);
 void getCharArray(nodeType* p, int lbl_kept);
 void assignCharArray(nodeType* p, char* str, int lbl_kept);
@@ -45,6 +45,9 @@ StrMap* getArrDimSymTab();
 int pushStructMembers(nodeType* memberList, char* name);
 void defineStruct(structNodeType* strct);
 void declareStruct(char* regName, nodeType* p, int lbl_kept);
+int isStructType(nodeType* p);
+void pushStructOffset(nodeType* p, char* memberName);
+void assignToStruct(nodeType* p, int lbl_kept);
 
 /* function definitions */
 // execution of AST on each node
@@ -186,6 +189,14 @@ int ex(nodeType *p, int exType, int nops, ...) {
                         if (debug) fprintf(stdout, "\t// save to array %s\n", p->opr.op[0]->arr.name);
                         pushPtr(p->opr.op[0], lbl_kept);
                         if (!scanning) { fprintf(stdout, "\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
+                    } else if (p->type == typeOpr) {
+                        switch (p->opr.op[0]->opr.oper) {
+                            case DOT:
+                                assignToStruct(p->opr.op[0], lbl_kept);
+                                break;
+                            default:
+                                break;
+                        }
                     }
                     break;
                 case GETC:
@@ -199,6 +210,14 @@ int ex(nodeType *p, int exType, int nops, ...) {
                         if (!scanning) fprintf(stdout, "\t// save to array %s\n", p->opr.op[0]->arr.name);
                         pushPtr(p->opr.op[0], lbl_kept);
                         if (!scanning) { fprintf(stdout, "\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
+                    } else if (p->type == typeOpr) {
+                        switch (p->opr.op[0]->opr.oper) {
+                            case DOT:
+                                assignToStruct(p->opr.op[0], lbl_kept);
+                                break;
+                            default:
+                                break;
+                        }
                     }
                     break;
                 case GETS:
@@ -213,6 +232,14 @@ int ex(nodeType *p, int exType, int nops, ...) {
                             if (debug) fprintf(stdout, "\t// save to array %s\n", p->opr.op[0]->arr.name);
                             pushPtr(p->opr.op[0], lbl_kept);
                             if (!scanning) { fprintf(stdout, "\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
+                        } else if (p->type == typeOpr) {
+                            switch (p->opr.op[0]->opr.oper) {
+                                case DOT:
+                                    assignToStruct(p->opr.op[0], lbl_kept);
+                                    break;
+                                default:
+                                    break;
+                            }
                         }
                     } else {
                         // get char array
@@ -231,6 +258,14 @@ int ex(nodeType *p, int exType, int nops, ...) {
                         if (debug) fprintf(stdout, "\t// save to array %s\n", p->opr.op[0]->arr.name);
                         pushPtr(p->opr.op[0], lbl_kept);
                         if (!scanning) { fprintf(stdout, "\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
+                    } else if (p->type == typeOpr) {
+                        switch (p->opr.op[0]->opr.oper) {
+                            case DOT:
+                                assignToStruct(p->opr.op[0], lbl_kept);
+                                break;
+                            default:
+                                break;
+                        }
                     }
                     break;
                 case PUTI: 
@@ -320,6 +355,18 @@ int ex(nodeType *p, int exType, int nops, ...) {
                                 ex(p->opr.op[0]->opr.op[0], -1, 1, lbl_kept);
                                 if (!scanning) { fprintf(stdout, "\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
                                 break;
+                            case DOT:
+                                if (debug) printf("\t// struct member assignment\n");
+                                // calculate expression
+                                ex(p->opr.op[1], 1, lbl_kept);
+                                // push struct variable pointer
+                                // pushPtr(p->opr.op[0]->opr.op[0], lbl_kept);
+                                // pushStructOffset(p->opr.op[0]->opr.op[0], p->opr.op[0]->opr.op[1]->id.varName);
+                                // if (!scanning) { fprintf(stdout, "\tadd\n"); fprintf(stdout, "\n\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
+                                
+                                // assign
+                                assignToStruct(p->opr.op[0], lbl_kept);
+                                break;
                             default:
                                 break;
                         }
@@ -360,7 +407,7 @@ int ex(nodeType *p, int exType, int nops, ...) {
                     if (!scanning) { fprintf(stdout, "\tret\n"); }
                     break;
                 case ARRAY_DECL:
-                    if (scanning) declareArray(reg, &p->opr.op[0]->arr, lbl_kept);
+                    if (scanning) declareArray(reg, &p->opr.op[0]->arr, 1, lbl_kept);
                     break;
                 case ',':
                     ex(p->opr.op[0], -1, 1, lbl_kept);
@@ -369,8 +416,11 @@ int ex(nodeType *p, int exType, int nops, ...) {
                 case STRUCT_DECL:
                     if (scanning) declareStruct(reg, p, lbl_kept);
                     break;
-                case '.':
-                    if (!scanning) fprintf(stdout, "dot operation\n");
+                case DOT:
+                    if (debug) printf("\n\t// access struct member .%s\n", p->opr.op[1]->id.varName); 
+                    pushPtr(p->opr.op[0], lbl_kept);
+                    pushStructOffset(p->opr.op[0], p->opr.op[1]->id.varName);
+                    if (!scanning) { fprintf(stdout, "\tadd\n"); fprintf(stdout, "\tpop\tac\n"); fprintf(stdout, "\tpush\tac[0]\n"); }
                     break;
                 case EQ:
                     if (p->opr.op[1]->type == typeCon && p->opr.op[1]->con.type == varTypeStr ||
@@ -668,6 +718,8 @@ int isArrayPtr(nodeType* p) {
         if (sm_exists(arr_dim_sym_tab, p->arr.name)) {
             sm_get(arr_dim_sym_tab, p->arr.name, dimension, DIM_STR_LEN);
             arr_dimension = atoi(strtok(dimension, ","));
+            // arr_dimension = atoi(strtok(dimension, "|")); // dummy, unit_size
+            // arr_dimension = atoi(strtok(NULL, "|"));
             return p->arr.dimension < arr_dimension;
         } else if (sm_exists(local_sym_tab->symbol_table, p->arr.name)) {
             return 0;
@@ -687,7 +739,7 @@ StrMap* getArrDimSymTab() {
 }
 
 // array declaration
-void declareArray(char* reg, arrNodeType* array, int lbl_kept) {
+void declareArray(char* reg, arrNodeType* array, int size, int lbl_kept) {
     StrMap* arrayDimTab = getArrDimSymTab();
     char dimension[DIM_STR_LEN], buffer[DIM_STR_LEN];
 
@@ -696,6 +748,7 @@ void declareArray(char* reg, arrNodeType* array, int lbl_kept) {
     arrOffsetListNodeType *node = array->offsetListHead;
     int offset = node->offset->con.value;
     sprintf(dimension, "%d,%d", array->dimension, offset);
+    // sprintf(dimension, "%d|%d|%d", array->dimension, size, offset); // prepend count -> count|unit_size|dim1,dim2,...|unit_size
     node = node->next;
 
     while (node) {
@@ -710,11 +763,13 @@ void declareArray(char* reg, arrNodeType* array, int lbl_kept) {
     }
 
     // declare
-    getRegister(reg, array->name, offset);
-    assert(!sm_exists(arrayDimTab, array->name));
-    sm_put(arrayDimTab, array->name, dimension);
+    getRegister(reg, array->name, offset * size);
+    if (scanning || flevel != 0) {
+        assert(!sm_exists(arrayDimTab, array->name));
+        sm_put(arrayDimTab, array->name, dimension);
+    }
 
-    array->size = offset;
+    array->size = offset * size;
 }
 
 // array assignment
@@ -825,7 +880,7 @@ void assignCharArray(nodeType* p, char* str, int lbl_kept) {
 void pushPtr(nodeType* p, int lbl_kept) {
     StrMap* arrDimTab = getArrDimSymTab();
     char dimension[DIM_STR_LEN];
-    int dim; 
+    int dim, unit_size; 
     char* temp_dim;
     char reg[REG_NAME_LEN];
 
@@ -853,6 +908,8 @@ void pushPtr(nodeType* p, int lbl_kept) {
             if (sm_exists(arrDimTab, p->arr.name)) {
                 sm_get(arrDimTab, p->arr.name, dimension, DIM_STR_LEN);
                 dim = atoi(strtok(dimension, ",")); // dummy
+                // unit_size = atoi(strtok(dimension, "|")); // unit_size
+                // dim = atoi(strtok(NULL, "|"));            // dummy
                 dim = atoi(strtok(NULL, ","));      // dummy
 
                 while (node) {
@@ -870,6 +927,10 @@ void pushPtr(nodeType* p, int lbl_kept) {
                     if (!scanning) { fprintf(stdout, "\tpush\t%d\n", dim); fprintf(stdout, "\tmul\n"); }
                     temp_dim = strtok(NULL, ",");
                 }
+
+                // if (!scanning) fprintf(stdout, "\tadd\n");
+                // if (!scanning) fprintf(stdout, "\tpush\t%d\n", unit_size); 
+                // if (!scanning) fprintf(stdout, "\tmul\n"); 
             }
             if (!scanning) fprintf(stdout, "\tadd\n");
         }
@@ -955,11 +1016,66 @@ void declareStruct(char* regName, nodeType* p, int lbl_kept) {
     int size = atoi(sizeBuffer);
 
     // declare
-    getRegister(regName, p->opr.op[1]->id.varName, size);
+    if (p->opr.op[1]->type == typeId) {
+        getRegister(regName, p->opr.op[1]->id.varName, size);
+        // key: var name, value: struct type name
+        sm_put(struct_sym_tab->symbol_table, p->opr.op[1]->id.varName, p->opr.op[0]->id.varName);
+    } else if (p->opr.op[1]->type == typeArr) {
+        declareArray(regName, &p->opr.op[1]->arr, size, lbl_kept);
+        // key: array name, value: struct type name
+        sm_put(struct_sym_tab->symbol_table, p->opr.op[1]->arr.name, p->opr.op[0]->id.varName);
+    } else {
+        assert(0);
+    }
 
-    // key: var name, value: struct type name
-    sm_put(struct_sym_tab->symbol_table, p->opr.op[1]->id.varName, p->opr.op[0]->id.varName);
     struct_sym_tab->size++;
+}
+
+// judege whether is a struct: 1 for yes 0 for no
+int isStructType(nodeType* p) {
+    if (p->type == typeId) {
+        if (sm_exists(local_sym_tab->symbol_table, p->id.varName) && sm_exists(struct_sym_tab->symbol_table, p->id.varName)) {
+            return 1;
+        }
+    } else if (p->type == typeArr) {
+        if (sm_exists(local_sym_tab->symbol_table, p->arr.name) && sm_exists(struct_sym_tab->symbol_table, p->arr.name)) {
+            return 1;
+        }
+    } else {
+        assert(0);
+    }
+
+    return 0;
+}
+
+// push struct offset to stack
+void pushStructOffset(nodeType* p, char* memberName) {
+    char structType[VAR_NAME_LEN], structMemberRep[2 * VAR_NAME_LEN], memberOffset[STRUCT_MEMBER_SIZE];
+    char* varName;
+
+    // get member offset from symbol table
+    if (p->type == typeId) {
+        if (p->id.varName[0] == '$') varName = p->id.varName + 1;
+        else varName = p->id.varName;
+    } else if (p->type == typeArr)  {
+        if (p->arr.name[0] == '$') varName = p->arr.name + 1;
+        else varName = p->arr.name;
+    }
+    sm_get(struct_sym_tab->symbol_table, varName, structType, VAR_NAME_LEN);
+    sprintf(structMemberRep, "%s.%s", structType, memberName);
+    sm_get(struct_sym_tab->symbol_table, structMemberRep, memberOffset, STRUCT_MEMBER_SIZE);
+
+    // push offset
+    if(!scanning) fprintf(stdout, "\tpush\t%s\n", memberOffset);
+}
+
+// assign value to struct
+void assignToStruct(nodeType* p, int lbl_kept) {
+    // push struct variable pointer
+    pushPtr(p->opr.op[0], lbl_kept);
+    pushStructOffset(p->opr.op[0], p->opr.op[1]->id.varName);
+
+    if (!scanning) { fprintf(stdout, "\tadd\n"); fprintf(stdout, "\n\tpop\tac\n"); fprintf(stdout, "\tpop\tac[0]\n"); }
 }
 
 // program initialization for execution
