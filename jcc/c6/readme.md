@@ -23,10 +23,13 @@ In addition, these features have been added to c6:
 - Control flow: `break` and `continue`;
 - String functioning as other normal variables (assignment, comparison, print);
 - Multi-dimensional arrays (any dimension);
+	- `array arr[4][10]`;
 - String concatenation;
 - Reference (`*`) & Dereference (`&`);
 - Floating numbers;
-- Struct (TODO);
+- Struct;
+	- `struct s { a, b, c };`;
+	- `<s> ss;`;
 
 ## Example programs
 
