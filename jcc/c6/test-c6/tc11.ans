@@ -1,6 +1,3 @@
-Enter a color:
-r=111
-g=222
-b=111
-Color: r=111, g=222, b=111
-
+Enter a number (0~255):
+Color not valid! Enter again:
+Color: r=111, g=111, b=111

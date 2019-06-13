@@ -50,7 +50,7 @@ done
 for i in `ls test-c6/*.sc`
 do
 	echo "+++++++++++++++++++++++++++++++++++"
-	echo "|          $i           |"
+	echo "|          $i        |"
 	echo "+++++++++++++++++++++++++++++++++++"
 	./c6c < $i > test-c6/${i:8:4}.nas
 	printf "\n>>>> Source code:\n\n"
@@ -66,6 +66,9 @@ do
 	elif [ "$counter" -eq "23" ]
 	then
 		echo "3.45" | ./nas test-c6/${i:8:4}.nas > output
+	elif [ "$counter" -eq "25" ]
+        then
+                echo "272 111" | ./nas test-c6/${i:8:4}.nas > output
 	else
         	./nas test-c6/${i:8:4}.nas > output
 	fi
