@@ -41,6 +41,8 @@ For c6,
 - Multi-dimensional arrays (any dimension);
 - String concatenation;
 - Reference (`*`) & Dereference (`&`);
+- Float numbers;
+- Struct;
 
 ## Example programs
 
@@ -48,6 +50,8 @@ For c6,
 - fact.sc - factorial
 - max.sc - pick the max number
 - rev-c.sc - reverse the string
+
+There's also a Tic-Tac-Toe application written in c6. See in `apps`.
 
 ## To run
 
